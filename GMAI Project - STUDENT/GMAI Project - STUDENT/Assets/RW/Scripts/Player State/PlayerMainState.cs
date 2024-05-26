@@ -7,7 +7,7 @@ namespace Player
 {
     public class PlayerMainState : FSMState
     {
-        protected FSM substates;
+        protected FSM subFSM;
         protected Character character;
 
         public PlayerMainState(Character character , FSM mfsm)
@@ -26,8 +26,16 @@ namespace Player
             //todo add the states here
         }
 
+        public PlayerMovementState(Character character, FSM mfsm , FSM subFSm) : base(character, mfsm)
+        {
+            mId = (int)MainState.Movement;
+            this.subFSM = subFSm;
+            //todo add the states here
+        }
+
         public override void Update()
         {
+            subFSM.Update();
             DetermineStateChange();
         }
         public override void FixedUpdate()
@@ -54,14 +62,30 @@ namespace Player
             {
                 mFsm.SetCurrentState((int)MainState.Crouch);
             }
+            else if (Input.GetKeyUp(KeyCode.Space))
+            {
+                mFsm.SetCurrentState((int)MainState.Jump);
+            }
+            else if (!character.IsGrounded)
+            {
+                mFsm.SetCurrentState((int)MainState.Falling);
+            }
         }
     }
 
     public class PlayerCrouchState : PlayerMainState
     {
+
         public PlayerCrouchState(Character character, FSM mfsm) : base(character, mfsm)
         {
             mId = (int)MainState.Crouch;
+            //todo set up sub states
+        }
+
+        public PlayerCrouchState(Character character, FSM mfsm , FSM subStateFSM) : base(character, mfsm)
+        {
+            mId = (int)MainState.Crouch;
+            subFSM = subStateFSM;
             //todo set up sub states
         }
 
@@ -82,6 +106,7 @@ namespace Player
 
         public override void Update()
         {
+            subFSM.Update();
             DetermineStateChange();
         }
 
@@ -109,13 +134,83 @@ namespace Player
             {
                 mFsm.SetCurrentState((int)MainState.Movement);
             }
+            else if (Input.GetKeyUp(KeyCode.Space))
+            {
+                mFsm.SetCurrentState((int)MainState.Jump);
+            }
+            else if (!character.IsGrounded)
+            {
+                mFsm.SetCurrentState((int)MainState.Falling);
+            }
         }
     }
 
     public class PlayerJumpState : PlayerMainState
     {
+        private int jumpParam = Animator.StringToHash("Jump");
+
         public PlayerJumpState(Character character, FSM mfsm) : base(character, mfsm)
         {
+            mId = (int)MainState.Jump;
+        }
+
+        
+
+        public override void Enter()
+        {
+            Jump();
+            mFsm.SetCurrentState((int)MainState.Falling);
+        }
+
+        private void Jump()
+        {
+            character.transform.Translate(Vector3.up * (character.CollisionOverlapRadius + 0.1f));
+            character.ApplyImpulse(Vector3.up * character.JumpForce);
+            character.TriggerAnimation(jumpParam);
+        }
+    }
+
+    public class PlayerFallingState : PlayerMainState
+    {
+        int landParam = Animator.StringToHash("Land");
+        int hardLand = Animator.StringToHash("HardLand");
+        float elapseTime;
+        bool hasLanded;
+        public PlayerFallingState(Character character, FSM mfsm) : base(character, mfsm)
+        {
+            mId = (int)MainState.Falling;
+        }
+
+        public override void Enter()
+        {
+            character.Anim.ResetTrigger(landParam);
+            character.Anim.ResetTrigger(hardLand);
+        }
+
+        public override void Update()
+        {
+            elapseTime += Time.deltaTime;
+            if (character.IsGrounded && !hasLanded)
+            {
+                hasLanded = true;   
+                if(elapseTime < 2f)
+                {
+                    character.TriggerAnimation(landParam);
+                }
+                else 
+                {
+                    character.DiveBomb();
+                }
+                mFsm.SetCurrentState((int)MainState.Movement);
+            }
+        }
+
+
+        public override void Exit()
+        {
+            elapseTime = 0f;
+            hasLanded = false;
+            
         }
     }
 
@@ -125,6 +220,141 @@ namespace Player
         Jump,
         Falling,
         Crouch
+    }
+
+    public class PlayerSubState : FSMState
+    {
+        protected Character character;
+
+        public PlayerSubState(Character character , FSM mfsm)
+        {
+            this.character = character;
+            this.mFsm = mfsm;
+        }
+    }
+
+    public class PlayerMeleeAttack : PlayerSubState
+    {
+        bool hasDrawSword;
+        int sheathSwordAnimation = Animator.StringToHash("SheathMelee");
+        int swingSwordAnimation = Animator.StringToHash("SwingMelee");
+        int drawSwordAnimation = Animator.StringToHash("DrawMelee");
+        public PlayerMeleeAttack(Character character, FSM mfsm) : base(character, mfsm)
+        {
+            mId = (int)Substate.Melee;
+        }
+
+        public override void Enter()
+        {
+            character.SetAnimationBool(character.isMelee, true);
+            hasDrawSword = false;
+            character.Anim.ResetTrigger(drawSwordAnimation);
+            character.Anim.ResetTrigger(swingSwordAnimation);
+            character.Anim.ResetTrigger(sheathSwordAnimation);
+        }
+
+        public override void Update()
+        {
+            DetermineNextState();
+
+            Debug.Log(Input.GetKeyUp(KeyCode.Q));
+            if (Input.GetKeyUp(KeyCode.Q) )
+            {
+                if (hasDrawSword)
+                {
+                    SheathSword();
+                }
+                else
+                {
+                    DrawSword();
+                }
+            }
+
+            if (!hasDrawSword) return;
+            //wait for next input 
+
+            if (Input.GetKeyDown(KeyCode.Mouse0))
+            {
+                //show the attack
+                character.TriggerAnimation(swingSwordAnimation);
+            }
+
+
+        }
+
+        private void DrawSword()
+        {
+            hasDrawSword = true;
+            character.TriggerAnimation(drawSwordAnimation);
+            character.Equip(character.MeleeWeapon);
+        }
+
+        private void SheathSword()
+        {
+            hasDrawSword = false;
+            character.TriggerAnimation(sheathSwordAnimation);
+            character.Unequip();
+        }
+
+        public override void Exit()
+        {
+            SheathSword();
+        }
+
+        void DetermineNextState()
+        {
+            if (Input.GetKeyUp(KeyCode.E))
+            {
+                mFsm.SetCurrentState((int)Substate.Range);
+            }
+        }
+    }
+
+    public class PlayerRangeAttack : PlayerSubState
+    {
+        int shootAnimation = Animator.StringToHash("Shoot");
+
+        public PlayerRangeAttack(Character character, FSM mfsm) : base(character, mfsm)
+        {
+            mId = (int) Substate.Range;
+        }
+
+        public override void Enter()
+        {
+            character.SetAnimationBool(character.isMelee, false);
+            character.Equip(character.ShootableWeapon);
+        }
+
+        public override void Update()
+        {
+            DetermineNextState();
+            if (Input.GetKeyDown(KeyCode.Mouse0))
+            {
+                //show the attack
+                character.TriggerAnimation(shootAnimation);
+                character.Shoot();
+            }
+        }
+
+        public override void Exit()
+        {
+            character.Unequip();
+        }
+
+        void DetermineNextState()
+        {
+            if (Input.GetKeyUp(KeyCode.E))
+            {
+                mFsm.SetCurrentState((int)Substate.Melee);
+            }
+        }
+
+    }
+
+    public enum Substate
+    {
+        Melee,
+        Range,
     }
 
 }

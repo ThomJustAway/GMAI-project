@@ -59,6 +59,10 @@ namespace RayWenderlich.Unity.StatePatternInUnity
         private Animator anim;
         [SerializeField]
         private ParticleSystem shockWave;
+        [SerializeField]
+        private Transform playerFoot;
+        [SerializeField]
+        private float groundedSensor;
 #pragma warning restore 0649
         [SerializeField]
         private float meleeRestThreshold = 10f;
@@ -110,31 +114,39 @@ namespace RayWenderlich.Unity.StatePatternInUnity
 
         public int Crouching { get => crouching;}
 
-
+        public bool IsGrounded { get => CheckIfGrounded(); }
+        public Animator Anim { get => anim; set => anim = value; }
         #endregion
 
-
-
-        private FSM mFSM;
-
+        private FSM movementFSM;
+        private FSM attackingFSM;
         private void Start()
         {
             playerCollider = GetComponent<CapsuleCollider>();
-            mFSM = new FSM();
-            mFSM.Add(new PlayerMovementState(this,mFSM));
-            mFSM.Add(new PlayerCrouchState(this,mFSM));
-            mFSM.SetCurrentState((int)MainState.Movement);
-        }
+            
+            attackingFSM = new FSM();
+            attackingFSM.Add(new PlayerMeleeAttack(this, attackingFSM));
+            attackingFSM.Add(new PlayerRangeAttack(this, attackingFSM));
+            attackingFSM.SetCurrentState((int)Substate.Melee);
+            
+            movementFSM = new FSM();
+            movementFSM.Add(new PlayerMovementState(this,movementFSM , attackingFSM));
+            movementFSM.Add(new PlayerCrouchState(this,movementFSM, attackingFSM));
+            movementFSM.Add(new PlayerJumpState(this, movementFSM));
+            movementFSM.Add(new PlayerFallingState(this, movementFSM));
+            movementFSM.SetCurrentState((int)MainState.Movement);
 
+        }
 
         private void Update()
         {
-            mFSM.Update();
+            print(movementFSM.GetCurrentState());
+            movementFSM.Update();
         }
 
         private void FixedUpdate()
         {
-            mFSM.FixedUpdate();
+            movementFSM.FixedUpdate();
         }
 
         #region Methods
@@ -234,6 +246,15 @@ namespace RayWenderlich.Unity.StatePatternInUnity
             Destroy(currentWeapon);
         }
 
+        private bool CheckIfGrounded()
+        {
+            //shoot a raycast down
+            Ray ray = new Ray(playerFoot.transform.position, Vector3.zero);
+
+            //Debug.DrawRay(playerFoot.transform.position, Vector3.down * groundedSensor, Color.yellow);
+
+            return Physics.OverlapSphere(playerFoot.transform.position,groundedSensor,whatIsGround).Length > 0;
+        }
         public void ActivateHitBox()
         {
             hitBox.enabled = true;
@@ -254,6 +275,12 @@ namespace RayWenderlich.Unity.StatePatternInUnity
             currentWeapon.transform.SetParent(parent);
             currentWeapon.transform.localPosition = Vector3.zero;
             currentWeapon.transform.localRotation = Quaternion.identity;
+        }
+
+        private void OnDrawGizmos()
+        {
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawWireSphere(playerFoot.transform.position, groundedSensor);
         }
         #endregion
 

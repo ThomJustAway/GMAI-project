@@ -28,6 +28,7 @@
  * THE SOFTWARE.
  */
 
+using System;
 using UnityEngine;
 
 namespace RayWenderlich.Unity.StatePatternInUnity
@@ -40,8 +41,8 @@ namespace RayWenderlich.Unity.StatePatternInUnity
 
         public JumpingState(Character character, StateMachine stateMachine) : base(character, stateMachine)
         {
+            
         }
-
 
         private void Jump()
         {
