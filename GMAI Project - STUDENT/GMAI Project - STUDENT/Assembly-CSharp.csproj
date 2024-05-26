@@ -60,17 +60,22 @@
     <Analyzer Include="C:\Program Files\Unity\Hub\Editor\2022.3.13f1\Editor\Data\Tools\Unity.SourceGenerators\Unity.Properties.SourceGenerator.dll" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\RW\Scripts\Pattern\FSM.cs" />
     <Compile Include="Assets\RW\Scripts\Misc\HitBox.cs" />
     <Compile Include="Assets\RW\Scripts\States\JumpingState.cs" />
     <Compile Include="Assets\RW\Scripts\Misc\DestroyAfterAWhile.cs" />
     <Compile Include="Assets\RW\Scripts\States\StandingState.cs" />
     <Compile Include="Assets\RW\Scripts\Character.cs" />
     <Compile Include="Assets\RW\Scripts\Misc\SimpleCamFollow.cs" />
+    <Compile Include="Assets\RW\Scripts\Pattern\Singleton.cs" />
+    <Compile Include="Assets\RW\Scripts\Pattern\SingletonDontDestroy.cs" />
     <Compile Include="Assets\RW\Scripts\StateMachine.cs" />
+    <Compile Include="Assets\RW\Scripts\Pattern\PoolingPattern.cs" />
     <Compile Include="Assets\RW\Scripts\States\DuckingState.cs" />
     <Compile Include="Assets\RW\Scripts\Misc\SoundManager.cs" />
     <Compile Include="Assets\RW\Scripts\State.cs" />
     <Compile Include="Assets\RW\Scripts\Misc\CharacterData.cs" />
+    <Compile Include="Assets\RW\Scripts\Player State\PlayerMainState.cs" />
     <Compile Include="Assets\RW\Scripts\States\GroundedState.cs" />
     <Compile Include="Assets\RW\Scripts\Misc\UIManager.cs" />
   </ItemGroup>

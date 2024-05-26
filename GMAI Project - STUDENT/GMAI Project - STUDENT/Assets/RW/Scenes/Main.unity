@@ -3833,6 +3833,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 512
   hitBox: {fileID: 2067796076}
+  playerCollider: {fileID: 1252697825}
   anim: {fileID: 13863967}
   shockWave: {fileID: 1712083590}
   meleeRestThreshold: 10

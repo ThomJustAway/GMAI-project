@@ -28,6 +28,8 @@
  * THE SOFTWARE.
  */
 
+using PGGE.Patterns;
+using Player;
 using UnityEngine;
 
 namespace RayWenderlich.Unity.StatePatternInUnity
@@ -52,6 +54,8 @@ namespace RayWenderlich.Unity.StatePatternInUnity
         [SerializeField]
         private Collider hitBox;
         [SerializeField]
+        private CapsuleCollider playerCollider;
+        [SerializeField]
         private Animator anim;
         [SerializeField]
         private ParticleSystem shockWave;
@@ -69,6 +73,7 @@ namespace RayWenderlich.Unity.StatePatternInUnity
         private int verticalMoveParam = Animator.StringToHash("V_Speed");
         private int shootParam = Animator.StringToHash("Shoot");
         private int hardLanding = Animator.StringToHash("HardLand");
+        private int crouching = Animator.StringToHash("Crouch");
         #endregion
 
         #region Properties
@@ -103,7 +108,34 @@ namespace RayWenderlich.Unity.StatePatternInUnity
             }
         }
 
+        public int Crouching { get => crouching;}
+
+
         #endregion
+
+
+
+        private FSM mFSM;
+
+        private void Start()
+        {
+            playerCollider = GetComponent<CapsuleCollider>();
+            mFSM = new FSM();
+            mFSM.Add(new PlayerMovementState(this,mFSM));
+            mFSM.Add(new PlayerCrouchState(this,mFSM));
+            mFSM.SetCurrentState((int)MainState.Movement);
+        }
+
+
+        private void Update()
+        {
+            mFSM.Update();
+        }
+
+        private void FixedUpdate()
+        {
+            mFSM.FixedUpdate();
+        }
 
         #region Methods
 
@@ -122,6 +154,20 @@ namespace RayWenderlich.Unity.StatePatternInUnity
 
             anim.SetFloat(horizonalMoveParam, GetComponent<Rigidbody>().angularVelocity.y);
             anim.SetFloat(verticalMoveParam, speed * Time.deltaTime);
+        }
+
+        public void SetCrouchCollider(bool shouldCrouch)
+        {
+            if (shouldCrouch)
+            {
+                playerCollider.height /= 2;
+                playerCollider.center /= 2;
+            }
+            else
+            {
+                playerCollider.height *= 2;
+                playerCollider.center *= 2;
+            }
         }
 
         public void ResetMoveParams()
