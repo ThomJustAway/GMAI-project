@@ -360,6 +360,7 @@
 "Assets/RW/Scripts/Misc/SimpleCamFollow.cs"
 "Assets/RW/Scripts/Misc/SoundManager.cs"
 "Assets/RW/Scripts/Misc/UIManager.cs"
+"Assets/RW/Scripts/NormalNPCBehaviour.cs"
 "Assets/RW/Scripts/Pattern/FSM.cs"
 "Assets/RW/Scripts/Pattern/PoolingPattern.cs"
 "Assets/RW/Scripts/Pattern/Singleton.cs"

@@ -245,7 +245,7 @@ namespace Player
             character.SetCrouchCollider(true);
         }
 
-        public override void Update()
+        public override void FixedUpdate()
         {
             float vertInput = Input.GetAxis("Vertical");
             if(vertInput > 0)

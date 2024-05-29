@@ -66,6 +66,7 @@
     <Compile Include="Assets\RW\Scripts\Misc\DestroyAfterAWhile.cs" />
     <Compile Include="Assets\RW\Scripts\States\StandingState.cs" />
     <Compile Include="Assets\RW\Scripts\BehaviourTree\Leaf.cs" />
+    <Compile Include="Assets\RW\Scripts\NormalNPCBehaviour.cs" />
     <Compile Include="Assets\RW\Scripts\Character.cs" />
     <Compile Include="Assets\RW\Scripts\Misc\SimpleCamFollow.cs" />
     <Compile Include="Assets\RW\Scripts\Pattern\Singleton.cs" />

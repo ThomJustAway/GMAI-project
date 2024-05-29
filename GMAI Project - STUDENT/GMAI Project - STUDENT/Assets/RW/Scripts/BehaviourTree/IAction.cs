@@ -1,5 +1,6 @@
 ﻿using System;
-
+using UnityEngine;
+using UnityEngine.AI;
 
 namespace BehaviourTreeImplementation
 {
@@ -82,6 +83,36 @@ namespace BehaviourTreeImplementation
             }
             elapseTime += waitTime;
             return Status.Running;
+        }
+    }
+
+    public class WonderAround : IAction
+    {
+        NormalNPCBehaviour npc;
+        NavMeshAgent agent;
+        Vector3 targetPos;
+
+        public Status Action()
+        {
+            if (agent.pathPending) return Status.Running;
+            if(agent.path.status == NavMeshPathStatus.PathComplete) return Status.Success;
+
+            //else it  has not set a position
+            NavMeshPath path = new NavMeshPath();
+            Vector3 pos;
+            while (path.status == NavMeshPathStatus.PathInvalid)
+            {
+               Vector2 randPos = UnityEngine.Random.insideUnitCircle * 
+                    UnityEngine.Random.Range(1, npc.SearchRadius);
+                pos = new Vector3(randPos.x, 0, randPos.y);
+                agent.CalculatePath(pos, path);
+                //will continuously find a new pos until it is valid
+            }
+
+            agent.SetDestination(pos);
+            
+
+
         }
     }
 }
