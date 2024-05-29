@@ -65,9 +65,12 @@
     <Compile Include="Assets\RW\Scripts\States\JumpingState.cs" />
     <Compile Include="Assets\RW\Scripts\Misc\DestroyAfterAWhile.cs" />
     <Compile Include="Assets\RW\Scripts\States\StandingState.cs" />
+    <Compile Include="Assets\RW\Scripts\BehaviourTree\Leaf.cs" />
     <Compile Include="Assets\RW\Scripts\Character.cs" />
     <Compile Include="Assets\RW\Scripts\Misc\SimpleCamFollow.cs" />
     <Compile Include="Assets\RW\Scripts\Pattern\Singleton.cs" />
+    <Compile Include="Assets\RW\Scripts\BehaviourTree\IAction.cs" />
+    <Compile Include="Assets\RW\Scripts\BehaviourTree\Node.cs" />
     <Compile Include="Assets\RW\Scripts\Pattern\SingletonDontDestroy.cs" />
     <Compile Include="Assets\RW\Scripts\StateMachine.cs" />
     <Compile Include="Assets\RW\Scripts\Pattern\PoolingPattern.cs" />
@@ -76,11 +79,15 @@
     <Compile Include="Assets\RW\Scripts\State.cs" />
     <Compile Include="Assets\RW\Scripts\Misc\CharacterData.cs" />
     <Compile Include="Assets\RW\Scripts\Player State\PlayerMainState.cs" />
+    <Compile Include="Assets\RW\Asset Store Creatures 03\Rabbits\Demo\Scripts\AnimatorParamatersChange.cs" />
     <Compile Include="Assets\RW\Scripts\States\GroundedState.cs" />
+    <Compile Include="Assets\RW\Asset Store Creatures 02\Lowpoly Toon Cat Lite\Demo\Cat_Lite_Demo.cs" />
     <Compile Include="Assets\RW\Scripts\Misc\UIManager.cs" />
+    <Compile Include="Assets\RW\Scripts\BehaviourTree\BehaviourTree.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\RW\Resources\Fonts\license.txt" />
+    <None Include="Assets\RW\Asset Store Creatures 03\PB_Spider\readme.txt" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">

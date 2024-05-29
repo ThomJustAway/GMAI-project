@@ -1,6 +1,5 @@
 ﻿using PGGE.Patterns;
 using RayWenderlich.Unity.StatePatternInUnity;
-using System.Drawing.Printing;
 using UnityEngine;
 
 namespace Player
@@ -66,6 +65,18 @@ namespace Player
             {
                 mFsm.SetCurrentState((int)MainState.Jump);
             }
+            else if (Input.GetKeyUp(KeyCode.F))
+            {
+                mFsm.SetCurrentState((int)MainState.Rolling);
+            }
+            else if (Input.GetKeyUp(KeyCode.Alpha1))
+            {
+                mFsm.SetCurrentState((int)MainState.Wave);
+            }
+            else if (Input.GetKeyUp(KeyCode.Mouse1))
+            {
+                mFsm.SetCurrentState((int)MainState.Block);
+            }
             else if (!character.IsGrounded)
             {
                 mFsm.SetCurrentState((int)MainState.Falling);
@@ -130,13 +141,17 @@ namespace Player
 
         private void DetermineStateChange()
         {
-            if (Input.GetKeyUp(KeyCode.Tab))
+            if (Input.GetKeyUp(KeyCode.Tab) && !character.IsSomethingAbove)
             {
                 mFsm.SetCurrentState((int)MainState.Movement);
             }
             else if (Input.GetKeyUp(KeyCode.Space))
             {
                 mFsm.SetCurrentState((int)MainState.Jump);
+            }
+            else if (Input.GetKeyUp(KeyCode.F))
+            {
+                mFsm.SetCurrentState((int)MainState.Rolling);
             }
             else if (!character.IsGrounded)
             {
@@ -214,12 +229,123 @@ namespace Player
         }
     }
 
+    public class PlayerRollingState : PlayerMainState
+    {
+        int rollAnimation = Animator.StringToHash("Roll");
+        Animator animator;
+        public PlayerRollingState(Character character, FSM mfsm) : base(character, mfsm)
+        {
+            mId = (int)MainState.Rolling;
+            animator = character.Anim;
+        }
+
+        public override void Enter()
+        {
+            character.TriggerAnimation(rollAnimation);
+            character.SetCrouchCollider(true);
+        }
+
+        public override void Update()
+        {
+            float vertInput = Input.GetAxis("Vertical");
+            if(vertInput > 0)
+            {
+                //will continuously apply impulse.
+                character.ApplyImpulse(character.transform.forward * character.RollForce);
+            }
+            if(animator.GetCurrentAnimatorStateInfo(0).normalizedTime > 0.7 && 
+                animator.GetCurrentAnimatorStateInfo(0).IsName("Roll"))
+            {
+                //if the animation about to end then move to another state;
+                if(PreviousState.ID == (int)MainState.Movement && 
+                    character.IsSomethingAbove)
+                {
+                    mFsm.SetCurrentState((int)MainState.Crouch);
+                }
+                else
+                {
+                    mFsm.SetCurrentState(PreviousState);
+                }
+            }
+        }
+
+        public override void Exit()
+        {
+            character.SetCrouchCollider(false);
+            animator.ResetTrigger(rollAnimation);
+        }
+
+
+    }
+
+    public class PlayerWaveState : PlayerMainState
+    {
+        int waveState = Animator.StringToHash("Wave");
+        public PlayerWaveState(Character character, FSM mfsm) : base(character, mfsm)
+        {
+            mId = (int)MainState.Wave;
+        }
+
+        public override void Enter()
+        {
+            character.TriggerAnimation(waveState);
+        }
+
+        public override void Update()
+        {
+
+            if (character.Anim.GetCurrentAnimatorStateInfo(0).IsName("Wave") &&
+                character.Anim.GetCurrentAnimatorStateInfo(0).normalizedTime > 0.7f)
+            {
+                mFsm.SetCurrentState((int)MainState.Movement);
+            }
+        }
+
+        public override void Exit()
+        {
+            character.Anim.ResetTrigger(waveState);
+        }
+
+    }
+
+    public class PlayerBlockState : PlayerMainState
+    {
+        int blockState = Animator.StringToHash("Block");
+        public PlayerBlockState(Character character, FSM mfsm) : base(character, mfsm)
+        {
+            mId = (int)MainState.Block;
+        }
+
+        public override void Enter()
+        {
+            character.TriggerAnimation(blockState);
+        }
+        public override void Update()
+        {
+
+            if (character.Anim.GetCurrentAnimatorStateInfo(0).IsName("block") &&
+                character.Anim.GetCurrentAnimatorStateInfo(0).normalizedTime > 0.7f)
+            {
+                mFsm.SetCurrentState((int)MainState.Movement);
+            }
+        }
+
+        public override void Exit()
+        {
+            character.Anim.ResetTrigger(blockState);
+        }
+    }
+
     public enum MainState
     {
         Movement,
         Jump,
         Falling,
-        Crouch
+        Crouch,
+        Rolling,
+        Wave,
+        Block,
+        
     }
 
     public class PlayerSubState : FSMState
@@ -257,7 +383,6 @@ namespace Player
         {
             DetermineNextState();
 
-            Debug.Log(Input.GetKeyUp(KeyCode.Q));
             if (Input.GetKeyUp(KeyCode.Q) )
             {
                 if (hasDrawSword)

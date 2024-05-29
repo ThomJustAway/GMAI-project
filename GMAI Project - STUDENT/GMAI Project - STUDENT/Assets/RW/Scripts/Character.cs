@@ -62,7 +62,9 @@ namespace RayWenderlich.Unity.StatePatternInUnity
         [SerializeField]
         private Transform playerFoot;
         [SerializeField]
-        private float groundedSensor;
+        private Transform playerHead;
+        [SerializeField]
+        private float Sensor;
 #pragma warning restore 0649
         [SerializeField]
         private float meleeRestThreshold = 10f;
@@ -70,6 +72,8 @@ namespace RayWenderlich.Unity.StatePatternInUnity
         private float diveThreshold = 1f;
         [SerializeField]
         private float collisionOverlapRadius = 0.1f;
+        [SerializeField]
+        private float rollForce = 0.5f;
 
         private GameObject currentWeapon;
         private Quaternion currentRotation;
@@ -115,7 +119,9 @@ namespace RayWenderlich.Unity.StatePatternInUnity
         public int Crouching { get => crouching;}
 
         public bool IsGrounded { get => CheckIfGrounded(); }
+        public bool IsSomethingAbove { get => CheckIfSomethingIsAbove(); }
         public Animator Anim { get => anim; set => anim = value; }
+        public float RollForce { get => rollForce; set => rollForce = value; }
         #endregion
 
         private FSM movementFSM;
@@ -134,6 +140,9 @@ namespace RayWenderlich.Unity.StatePatternInUnity
             movementFSM.Add(new PlayerCrouchState(this,movementFSM, attackingFSM));
             movementFSM.Add(new PlayerJumpState(this, movementFSM));
             movementFSM.Add(new PlayerFallingState(this, movementFSM));
+            movementFSM.Add(new PlayerRollingState(this, movementFSM));
+            movementFSM.Add(new PlayerWaveState(this, movementFSM));
+            movementFSM.Add(new PlayerBlockState(this, movementFSM));
             movementFSM.SetCurrentState((int)MainState.Movement);
 
         }
@@ -249,11 +258,18 @@ namespace RayWenderlich.Unity.StatePatternInUnity
         private bool CheckIfGrounded()
         {
             //shoot a raycast down
-            Ray ray = new Ray(playerFoot.transform.position, Vector3.zero);
 
-            //Debug.DrawRay(playerFoot.transform.position, Vector3.down * groundedSensor, Color.yellow);
+            //Debug.DrawRay(playerFoot.transform.position, Vector3.down * Sensor, Color.yellow);
 
-            return Physics.OverlapSphere(playerFoot.transform.position,groundedSensor,whatIsGround).Length > 0;
+            return Physics.OverlapSphere(playerFoot.transform.position,Sensor,whatIsGround).Length > 0;
+        }
+
+        private bool CheckIfSomethingIsAbove()
+        {
+
+            //Debug.DrawRay(playerFoot.transform.position, Vector3.down * Sensor, Color.yellow);
+
+            return Physics.OverlapSphere(playerHead.transform.position, Sensor, whatIsGround).Length > 0;
         }
         public void ActivateHitBox()
         {
@@ -280,7 +296,9 @@ namespace RayWenderlich.Unity.StatePatternInUnity
         private void OnDrawGizmos()
         {
             Gizmos.color = Color.yellow;
-            Gizmos.DrawWireSphere(playerFoot.transform.position, groundedSensor);
+            Gizmos.DrawWireSphere(playerFoot.transform.position, Sensor);
+            Gizmos.DrawWireSphere(playerHead.transform.position, Sensor);
+
         }
         #endregion
 
