@@ -73,6 +73,7 @@
     <Compile Include="Assets\RW\Scripts\BehaviourTree\IAction.cs" />
     <Compile Include="Assets\RW\Scripts\BehaviourTree\Node.cs" />
     <Compile Include="Assets\RW\Scripts\Pattern\SingletonDontDestroy.cs" />
+    <Compile Include="Assets\RW\Scripts\Chris\IGrabbale.cs" />
     <Compile Include="Assets\RW\Scripts\StateMachine.cs" />
     <Compile Include="Assets\RW\Scripts\Pattern\PoolingPattern.cs" />
     <Compile Include="Assets\RW\Scripts\States\DuckingState.cs" />

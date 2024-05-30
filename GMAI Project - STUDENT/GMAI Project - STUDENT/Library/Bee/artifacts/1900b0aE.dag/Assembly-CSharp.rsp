@@ -354,6 +354,7 @@
 "Assets/RW/Scripts/BehaviourTree/Leaf.cs"
 "Assets/RW/Scripts/BehaviourTree/Node.cs"
 "Assets/RW/Scripts/Character.cs"
+"Assets/RW/Scripts/Chris/IGrabbale.cs"
 "Assets/RW/Scripts/Misc/CharacterData.cs"
 "Assets/RW/Scripts/Misc/DestroyAfterAWhile.cs"
 "Assets/RW/Scripts/Misc/HitBox.cs"

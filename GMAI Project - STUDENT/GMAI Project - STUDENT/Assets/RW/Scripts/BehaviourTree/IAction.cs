@@ -110,8 +110,6 @@ namespace BehaviourTreeImplementation
             }
 
             agent.SetDestination(pos);
-            
-
 
         }
     }
