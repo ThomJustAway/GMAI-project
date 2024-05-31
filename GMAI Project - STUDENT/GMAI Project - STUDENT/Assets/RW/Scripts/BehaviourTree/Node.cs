@@ -1,150 +1,219 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
+using System.Drawing.Printing;
+using System.Linq;
+using System.Text;
 using UnityEngine;
 
-namespace BehaviourTreeImplementation
-{
-
-    /// <summary>
-    /// A sequence Node is a composite node that will check all the children.
-    /// It returns success if all the node can run properly. else it would stop 
-    /// excuting the other node if a node runs as either running or fail.
-    /// </summary>
-    public class SequenceNode : CompositeNode
-    {
-        public SequenceNode(string name) : base(name)
-        {
-        }
-
-        public override Status Execute()
-        {
-            Debug.Log($"At sequence {Name} node");
-            //starts from left to right
-            if (children == null || children?.Count == 0)
-            {//check if can start the operation
-                Debug.LogError($"Please create a children for {Name}");
-                return Status.Failed;
+//used from https://github.com/adammyhre/Unity-Behaviour-Trees/tree/master/Assets/_Project/Scripts/BehaviourTrees
+namespace Pathfinding.BehaviourTrees {
+    // UntilSuccess
+    // Repeat
+    public class UntilFail : Node {
+        public UntilFail(string name) : base(name) { }
+        
+        public override Status Process() {
+            if (children[0].Process() == Status.Failure) {
+                Reset();
+                return Status.Failure;
             }
-            //run through all the node.
-            for(; currentChild < children.Count; currentChild++)
-            {
-                Status selectedStatus = children[currentChild].Execute();
-                if (selectedStatus == Status.Success)
-                {
-                    if(currentChild == children.Count - 1)
-                    {
-                        //if its the final node, then return success
-                        currentChild = 0;
-                        return Status.Success;
-                    }
-                    continue;
-                }
-                else
-                {
-                    //else return with the coresponding status.
-                    return selectedStatus;
-                }
-            }
-            //if something wrong
-            Debug.LogWarning($"Something wrong with node {Name}");
-            return Status.Failed;
+
+            return Status.Running;
         }
     }
-
-    /// <summary>
-    /// A selector node is a composite node that will check all the children
-    /// it has. if a child is failed to execute, then it will move on to the next children
-    /// it would stop running and return the corresponding result if it hits running or success.
-    /// </summary>
-    public class SelectorNode : CompositeNode
-    {
-        public SelectorNode(string name) : base(name)
-        {
-        }
-
-        public override Status Execute()
-        {
-            Debug.Log($"At selector {Name} node");
-
-            //start from left to right to decide which state is good
-            if (children == null || children?.Count == 0)
-            {//check if can start the operation
-                Debug.LogError($"Please create a children for {Name}");
-                return Status.Failed;
-            }
-            //wil go through all the children
-            for(; currentChild < children.Count; currentChild++)
-            {
-                var state = children[currentChild].Execute();
-                if (state == Status.Failed)
-                {//it fails if all the child have failed
-                    if( currentChild == children.Count - 1) { return Status.Failed; }
-                }
-                else
-                {
-                    //else stop if it recieve any other state.
-                    return state;
-                }
-            }
-
-            Debug.LogWarning($"Something wrong with node {Name}");
-            return Status.Failed;
-        }
-
-    }
-
-    //a composite node is a node that will consist of multiple node.
-    //it is a simple class for other composite nodes like selector and sequence node.
-    public abstract class CompositeNode : IExecutable
-    {
-        protected int currentChild;
-        protected List<IExecutable> children;
-
-        protected CompositeNode(string name)
-        {
-            Name = name;
-            this.children = new();
-        }
-
-        public string Name { get ; set ; }
-
-        public abstract Status Execute();
-
-        public void AddChild(IExecutable child)
-        {
-            children.Add(child);
-        }
-
-        public void AddChild(List<IExecutable> childList)
-        {
-            children = childList;
-        }
-
-        public void AddName(string name)
-        {
-            Name = name;
-        }
-
-        public void Reset()
-        {
-            currentChild = 0;
-        }
-    }
-
-    //each node will implement the IExecutable 
-    //as each node needs to execute in order 
-    //to know what status the node is in.
-    public interface IExecutable
-    {
-        public string Name { get; set; }
-
-        public Status Execute();
-    }    
     
-    //what status the node is in. only three which are success/failed/running
-    public enum Status
+    public class Inverter : Node {
+        public Inverter(string name) : base(name) { }
+        
+        public override Status Process() {
+            switch (children[0].Process()) {
+                case Status.Running:
+                    return Status.Running;
+                case Status.Failure:
+                    return Status.Success;
+                default:
+                    return Status.Failure;
+            }
+        }
+    }
+
+    public class RandomSelector : PrioritySelector
     {
-        Failed,
-        Running,
-        Success
+        protected override List<Node> SortChildren() => children.Shuffle().ToList();
+
+        public RandomSelector(string name, int priority = 0) : base(name, priority) { }
+    }
+
+
+    public class PrioritySelector : Selector {
+        List<Node> sortedChildren;
+        List<Node> SortedChildren => sortedChildren ??= SortChildren();
+        
+        protected virtual List<Node> SortChildren() => children.OrderByDescending(child => child.priority).ToList();
+        
+        public PrioritySelector(string name, int priority = 0) : base(name, priority) { }
+        
+        public override void Reset() {
+            base.Reset();
+            sortedChildren = null;
+        }
+        
+        public override Status Process() {
+            Debug.Log($"Current at {name}");
+            foreach (var child in SortedChildren) {
+                Debug.Log($"Running {child.name}");
+                switch (child.Process()) {
+                    case Status.Running:
+                        return Status.Running;
+                    case Status.Success:
+                        Reset();
+                        return Status.Success;
+                    default:
+                        continue;
+                }
+            }
+
+            Reset();
+            return Status.Failure;
+        }
+    }
+    
+    public class Selector : Node {
+        public Selector(string name, int priority = 0) : base(name, priority) { }
+
+        public override Status Process() {
+            Debug.Log($"Current at {name}");
+            if (currentChild < children.Count) {
+                Debug.Log($"Running {children[currentChild].name}");
+                switch (children[currentChild].Process()) {
+                    case Status.Running:
+                        return Status.Running;
+                    case Status.Success:
+                        Reset();
+                        return Status.Success;
+                    default:
+                        currentChild++;
+                        return Status.Running;
+                }
+            }
+            
+            Reset();
+            return Status.Failure;
+        }
+    }
+    
+    public class Sequence : Node {
+        public Sequence(string name, int priority = 0) : base(name, priority) { }
+
+        public override Status Process() {
+            Debug.Log($"Current at {name}");
+            if (currentChild < children.Count) {
+                Debug.Log($"Running {children[currentChild].name}");
+                switch (children[currentChild].Process()) {
+                    case Status.Running:
+                        return Status.Running;
+                    case Status.Failure:
+                        currentChild = 0;
+                        return Status.Failure;
+                    default:
+                        currentChild++;
+                        return currentChild == children.Count ? Status.Success : Status.Running;
+                }
+            }
+
+            Reset();
+            return Status.Success;
+        }
+    }
+    
+    public class Leaf : Node {
+        readonly IStrategy strategy;
+
+        public Leaf(string name, IStrategy strategy, int priority = 0) : base(name, priority) {
+            // Preconditions.CheckNotNull(strategy);
+            this.strategy = strategy;
+        }
+        
+        public override Status Process() => strategy.Process();
+
+        public override void Reset() => strategy.Reset();
+    }
+    
+    public class Node {
+        public enum Status { Success, Failure, Running }
+        
+        public readonly string name;
+        public readonly int priority;
+        
+        public readonly List<Node> children = new();
+        protected int currentChild;
+        
+        public Node(string name = "Node", int priority = 0) {
+            this.name = name;
+            this.priority = priority;
+        }
+        
+        public void AddChild(Node child) => children.Add(child);
+        
+        public virtual Status Process() => children[currentChild].Process();
+
+        public virtual void Reset() {
+            currentChild = 0;
+            foreach (var child in children) {
+                child.Reset();
+            }
+        }
+    }
+    
+    public interface IPolicy {
+        bool ShouldReturn(Node.Status status);
+    }
+
+    public static class Policies {
+        public static readonly IPolicy RunForever = new RunForeverPolicy();
+        public static readonly IPolicy RunUntilSuccess = new RunUntilSuccessPolicy();
+        public static readonly IPolicy RunUntilFailure = new RunUntilFailurePolicy();
+        
+        class RunForeverPolicy : IPolicy {
+            public bool ShouldReturn(Node.Status status) => false;
+        }
+        
+        class RunUntilSuccessPolicy : IPolicy {
+            public bool ShouldReturn(Node.Status status) => status == Node.Status.Success;
+        }
+        
+        class RunUntilFailurePolicy : IPolicy {
+            public bool ShouldReturn(Node.Status status) => status == Node.Status.Failure;
+        }
+    }
+    
+    public class BehaviourTree : Node {
+        readonly IPolicy policy;
+        
+        public BehaviourTree(string name, IPolicy policy = null) : base(name) {
+            this.policy = policy ?? Policies.RunForever;
+        }
+
+        public override Status Process() {
+            Status status = children[currentChild].Process();
+            if (policy.ShouldReturn(status)) {
+                return status;
+            }
+            
+            currentChild = (currentChild + 1) % children.Count;
+            return Status.Running;
+        }
+
+        public void PrintTree() {
+            StringBuilder sb = new StringBuilder();
+            PrintNode(this, 0, sb);
+            Debug.Log(sb.ToString());
+        }
+
+        static void PrintNode(Node node, int indentLevel, StringBuilder sb) {
+            sb.Append(' ', indentLevel * 2).AppendLine(node.name);
+            foreach (Node child in node.children) {
+                PrintNode(child, indentLevel + 1, sb);
+            }
+        }
     }
 }

@@ -126,6 +126,7 @@ namespace RayWenderlich.Unity.StatePatternInUnity
 
         private FSM movementFSM;
         private FSM attackingFSM;
+        public FSMState currentPlayerState { get { return movementFSM.GetCurrentState(); } }
         private void Start()
         {
             playerCollider = GetComponent<CapsuleCollider>();
@@ -149,7 +150,7 @@ namespace RayWenderlich.Unity.StatePatternInUnity
 
         private void Update()
         {
-            print(movementFSM.GetCurrentState());
+            //print(movementFSM.GetCurrentState());
             movementFSM.Update();
         }
 
@@ -259,7 +260,7 @@ namespace RayWenderlich.Unity.StatePatternInUnity
         {
             //shoot a raycast down
 
-            //Debug.DrawRay(playerFoot.transform.position, Vector3.down * Sensor, Color.yellow);
+            //Debug.DrawRay(playerFoot.transform.targetPosition, Vector3.down * Sensor, Color.yellow);
 
             return Physics.OverlapSphere(playerFoot.transform.position,Sensor,whatIsGround).Length > 0;
         }
@@ -267,7 +268,7 @@ namespace RayWenderlich.Unity.StatePatternInUnity
         private bool CheckIfSomethingIsAbove()
         {
 
-            //Debug.DrawRay(playerFoot.transform.position, Vector3.down * Sensor, Color.yellow);
+            //Debug.DrawRay(playerFoot.transform.targetPosition, Vector3.down * Sensor, Color.yellow);
 
             return Physics.OverlapSphere(playerHead.transform.position, Sensor, whatIsGround).Length > 0;
         }

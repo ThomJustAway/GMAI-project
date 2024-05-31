@@ -349,10 +349,8 @@
 -analyzer:"C:/Program Files/Unity/Hub/Editor/2022.3.13f1/Editor/Data/Tools/Unity.SourceGenerators/Unity.SourceGenerators.dll"
 "Assets/RW/Asset Store Creatures 02/Lowpoly Toon Cat Lite/Demo/Cat_Lite_Demo.cs"
 "Assets/RW/Asset Store Creatures 03/Rabbits/Demo/Scripts/AnimatorParamatersChange.cs"
-"Assets/RW/Scripts/BehaviourTree/BehaviourTree.cs"
-"Assets/RW/Scripts/BehaviourTree/IAction.cs"
-"Assets/RW/Scripts/BehaviourTree/Leaf.cs"
 "Assets/RW/Scripts/BehaviourTree/Node.cs"
+"Assets/RW/Scripts/BehaviourTree/Strategies.cs"
 "Assets/RW/Scripts/Character.cs"
 "Assets/RW/Scripts/Chris/IGrabbale.cs"
 "Assets/RW/Scripts/Misc/CharacterData.cs"
@@ -373,6 +371,8 @@
 "Assets/RW/Scripts/States/GroundedState.cs"
 "Assets/RW/Scripts/States/JumpingState.cs"
 "Assets/RW/Scripts/States/StandingState.cs"
+"Assets/RW/Scripts/Utility/ListExtansions.cs"
+"Assets/RW/Scripts/Utility/Vector3Extensions.cs"
 -langversion:9.0
 
 /deterministic
