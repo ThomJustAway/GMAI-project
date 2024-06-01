@@ -133,7 +133,12 @@ namespace Pathfinding.BehaviourTrees {
             this.strategy = strategy;
         }
         
-        public override Status Process() => strategy.Process();
+        public override Status Process()
+        {
+            var stat = strategy.Process();
+            Debug.Log($"Running leaf {name} with {stat}");
+            return stat;
+        }
 
         public override void Reset() => strategy.Reset();
     }

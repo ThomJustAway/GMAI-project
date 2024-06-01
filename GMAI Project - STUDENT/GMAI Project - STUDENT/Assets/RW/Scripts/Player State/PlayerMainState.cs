@@ -362,21 +362,24 @@ namespace Player
     public class PlayerMeleeAttack : PlayerSubState
     {
         bool hasDrawSword;
+        SwordBehaviour sword;
         int sheathSwordAnimation = Animator.StringToHash("SheathMelee");
         int swingSwordAnimation = Animator.StringToHash("SwingMelee");
         int drawSwordAnimation = Animator.StringToHash("DrawMelee");
+        Animator anim;
         public PlayerMeleeAttack(Character character, FSM mfsm) : base(character, mfsm)
         {
             mId = (int)Substate.Melee;
+            anim = character.Anim;
         }
 
         public override void Enter()
         {
             character.SetAnimationBool(character.isMelee, true);
             hasDrawSword = false;
-            character.Anim.ResetTrigger(drawSwordAnimation);
-            character.Anim.ResetTrigger(swingSwordAnimation);
-            character.Anim.ResetTrigger(sheathSwordAnimation);
+            anim.ResetTrigger(drawSwordAnimation);
+            anim.ResetTrigger(swingSwordAnimation);
+            anim.ResetTrigger(sheathSwordAnimation);
         }
 
         public override void Update()
@@ -401,9 +404,13 @@ namespace Player
             if (Input.GetKeyDown(KeyCode.Mouse0))
             {
                 //show the attack
+                sword.SetHitBox(true);
                 character.TriggerAnimation(swingSwordAnimation);
             }
-
+            else if (!anim.GetCurrentAnimatorStateInfo(1).IsName("SwingSword") )
+            {
+                sword.SetHitBox(false);
+            }
 
         }
 
@@ -412,12 +419,14 @@ namespace Player
             hasDrawSword = true;
             character.TriggerAnimation(drawSwordAnimation);
             character.Equip(character.MeleeWeapon);
+            sword = character.CurrentWeapon.GetComponent<SwordBehaviour>();
         }
 
         private void SheathSword()
         {
             hasDrawSword = false;
             character.TriggerAnimation(sheathSwordAnimation);
+            sword = null;
             character.Unequip();
         }
 

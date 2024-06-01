@@ -2,6 +2,7 @@ using Player;
 using RayWenderlich.Unity.StatePatternInUnity;
 using System;
 using System.Collections.Generic;
+using System.Drawing.Printing;
 using UnityEditor.Rendering;
 using UnityEngine;
 using UnityEngine.AI;
@@ -116,7 +117,7 @@ namespace Pathfinding.BehaviourTrees {
         readonly NormalNPCBehaviour merton;
         Vector3 targetPosition;
 
-        bool isPathCalculated;
+        bool isPathCalculated; 
         float wanderRadius = 10f;
 
         public WanderAround(Transform entity, NavMeshAgent agent, NormalNPCBehaviour merton)
@@ -129,6 +130,7 @@ namespace Pathfinding.BehaviourTrees {
 
         public Node.Status Process()
         {
+            merton.SetToWalkingSpeed();
             if (Vector3.Distance(entity.position, targetPosition) < agent.stoppingDistance)
             {
                 CreateTargetPosition();
@@ -138,7 +140,7 @@ namespace Pathfinding.BehaviourTrees {
             Debug.DrawLine(entity.position, targetPosition,Color.red);
 
             agent.SetDestination(targetPosition);
-            entity.LookAt(targetPosition.With(y: entity.position.y));
+            //entity.LookAt(targetPosition.With(y: entity.position.y));
             merton.PlayWalkingAnimation(targetPosition);
 
             if (agent.pathPending)
@@ -157,7 +159,7 @@ namespace Pathfinding.BehaviourTrees {
                     UnityEngine.Random.Range(1f, wanderRadius);
                 //get a radius
                 agent.CalculatePath(randPos, path);
-                if(path.status != NavMeshPathStatus.PathInvalid)
+                if(path.status == NavMeshPathStatus.PathComplete)
                 {
                     targetPosition = randPos.With(y: entity.position.y);
                     return;
@@ -173,24 +175,70 @@ namespace Pathfinding.BehaviourTrees {
         }
     }
 
+    public class ChasePlayer : IStrategy
+    {
+        readonly Transform entity;
+        readonly Transform player;
+        readonly NavMeshAgent agent;
+        readonly NormalNPCBehaviour merton;
+
+        bool isPathCalculated;
+        float wanderRadius = 10f;
+
+        public ChasePlayer(Transform entity, NavMeshAgent agent, Transform player, NormalNPCBehaviour merton)
+        {
+            this.entity = entity;
+            this.agent = agent;
+            this.merton = merton;
+            this.player = player;
+        }
+
+        public Node.Status Process()
+        {
+            merton.SetToRunningSpeed();
+            if (Vector3.Distance(entity.position, player.position) < 2f)
+            {
+                return Node.Status.Success;
+            }
+
+            merton.PlayRunningAnimation(player.position);
+            agent.SetDestination(player.position);
+            if (agent.pathPending)
+            {
+                isPathCalculated = true;
+            }
+            return Node.Status.Running;
+        }
+
+
+        public void Reset()
+        {
+            isPathCalculated = false;
+            merton.StopmovementAnimation();
+
+        }
+    }
+
     public class Wave : IStrategy
     {
         readonly Character player;
         readonly Transform entity;
         readonly Animator animator;
+        readonly NormalNPCBehaviour npc;
         bool hasWave = false;
-
-        public Wave(Character player, Transform entity, Animator animator)
+        public Wave(Character player, Transform entity, Animator animator , NormalNPCBehaviour npc)
         {
             this.player = player;
             this.entity = entity;
             this.animator = animator;
+            this.npc = npc;
         }
 
         public Node.Status Process()
         {
             if(player.currentPlayerState.ID == (int)MainState.Wave &&
-            Vector3.Distance(player.transform.position, entity.position) < 10f
+            Vector3.Distance(player.transform.position, entity.position) < 10f &&
+            !npc.IsMadAtPlayer
             )
             {
                 if (!hasWave)
@@ -203,7 +251,7 @@ namespace Pathfinding.BehaviourTrees {
             else
             {
                 hasWave = false;
-                return Node.Status.Success;
+                return Node.Status.Failure;
             }
 
         }
@@ -231,4 +279,33 @@ namespace Pathfinding.BehaviourTrees {
         }
     }
 
+    public class WaitForAttackToFinish : IStrategy
+    {
+        Animator animator;
+        MertonAttack weapon;
+        int weaponHash = Animator.StringToHash("Stab");
+
+        public WaitForAttackToFinish(Animator animator, MertonAttack weapon)
+        {
+            this.animator = animator;
+            this.weapon = weapon;
+        }
+
+        public Node.Status Process()
+        {
+            if (!animator.GetCurrentAnimatorStateInfo(0).IsName("Stab Attack"))
+            {
+                weapon.SetHitBox(false);
+                return Node.Status.Success;
+            }
+            return Node.Status.Running;
+
+        }
+
+        public void Reset()
+        {
+            weapon.SetHitBox(false);
+            animator.ResetTrigger(weaponHash);
+        }
+    }
 }

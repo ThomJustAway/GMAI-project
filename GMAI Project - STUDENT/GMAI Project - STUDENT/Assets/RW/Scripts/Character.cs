@@ -28,6 +28,7 @@
  * THE SOFTWARE.
  */
 
+using Assets.RW.Scripts;
 using PGGE.Patterns;
 using Player;
 using UnityEngine;
@@ -35,7 +36,7 @@ using UnityEngine;
 namespace RayWenderlich.Unity.StatePatternInUnity
 {
     [RequireComponent(typeof(CapsuleCollider))]
-    public class Character : MonoBehaviour
+    public class Character : MonoBehaviour, IDamageable
     {
         #region Variables
 
@@ -82,6 +83,8 @@ namespace RayWenderlich.Unity.StatePatternInUnity
         private int shootParam = Animator.StringToHash("Shoot");
         private int hardLanding = Animator.StringToHash("HardLand");
         private int crouching = Animator.StringToHash("Crouch");
+        private int hurtAnim = Animator.StringToHash("Hurt");
+
         #endregion
 
         #region Properties
@@ -127,6 +130,9 @@ namespace RayWenderlich.Unity.StatePatternInUnity
         private FSM movementFSM;
         private FSM attackingFSM;
         public FSMState currentPlayerState { get { return movementFSM.GetCurrentState(); } }
+
+        public GameObject CurrentWeapon { get => currentWeapon; set => currentWeapon = value; }
+
         private void Start()
         {
             playerCollider = GetComponent<CapsuleCollider>();
@@ -300,6 +306,12 @@ namespace RayWenderlich.Unity.StatePatternInUnity
             Gizmos.DrawWireSphere(playerFoot.transform.position, Sensor);
             Gizmos.DrawWireSphere(playerHead.transform.position, Sensor);
 
+        }
+
+        public void TakeDamage(object sender, int damage)
+        {
+            print("took damage");
+            anim.SetTrigger(hurtAnim);
         }
         #endregion
 

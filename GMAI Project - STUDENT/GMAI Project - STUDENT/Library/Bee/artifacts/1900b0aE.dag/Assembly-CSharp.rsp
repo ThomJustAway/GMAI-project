@@ -353,6 +353,8 @@
 "Assets/RW/Scripts/BehaviourTree/Strategies.cs"
 "Assets/RW/Scripts/Character.cs"
 "Assets/RW/Scripts/Chris/IGrabbale.cs"
+"Assets/RW/Scripts/IDamageable.cs"
+"Assets/RW/Scripts/MertonAttack.cs"
 "Assets/RW/Scripts/Misc/CharacterData.cs"
 "Assets/RW/Scripts/Misc/DestroyAfterAWhile.cs"
 "Assets/RW/Scripts/Misc/HitBox.cs"
@@ -371,6 +373,7 @@
 "Assets/RW/Scripts/States/GroundedState.cs"
 "Assets/RW/Scripts/States/JumpingState.cs"
 "Assets/RW/Scripts/States/StandingState.cs"
+"Assets/RW/Scripts/SwordBehaviour.cs"
 "Assets/RW/Scripts/Utility/ListExtansions.cs"
 "Assets/RW/Scripts/Utility/Vector3Extensions.cs"
 -langversion:9.0

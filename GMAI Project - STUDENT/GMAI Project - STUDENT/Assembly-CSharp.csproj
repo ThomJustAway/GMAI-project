@@ -67,6 +67,7 @@
     <Compile Include="Assets\RW\Scripts\Misc\DestroyAfterAWhile.cs" />
     <Compile Include="Assets\RW\Scripts\States\StandingState.cs" />
     <Compile Include="Assets\RW\Scripts\NormalNPCBehaviour.cs" />
+    <Compile Include="Assets\RW\Scripts\IDamageable.cs" />
     <Compile Include="Assets\RW\Scripts\Character.cs" />
     <Compile Include="Assets\RW\Scripts\Misc\SimpleCamFollow.cs" />
     <Compile Include="Assets\RW\Scripts\Pattern\Singleton.cs" />
@@ -79,7 +80,9 @@
     <Compile Include="Assets\RW\Scripts\Pattern\PoolingPattern.cs" />
     <Compile Include="Assets\RW\Scripts\States\DuckingState.cs" />
     <Compile Include="Assets\RW\Scripts\Misc\SoundManager.cs" />
+    <Compile Include="Assets\RW\Scripts\SwordBehaviour.cs" />
     <Compile Include="Assets\RW\Scripts\State.cs" />
+    <Compile Include="Assets\RW\Scripts\MertonAttack.cs" />
     <Compile Include="Assets\RW\Scripts\Misc\CharacterData.cs" />
     <Compile Include="Assets\RW\Scripts\Player State\PlayerMainState.cs" />
     <Compile Include="Assets\RW\Asset Store Creatures 03\Rabbits\Demo\Scripts\AnimatorParamatersChange.cs" />
