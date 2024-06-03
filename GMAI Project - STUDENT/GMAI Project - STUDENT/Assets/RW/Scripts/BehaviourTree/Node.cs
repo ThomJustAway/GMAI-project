@@ -58,9 +58,9 @@ namespace Pathfinding.BehaviourTrees {
         }
         
         public override Status Process() {
-            Debug.Log($"Current at {name}");
+            //Debug.Log($"Current at {name}");
             foreach (var child in SortedChildren) {
-                Debug.Log($"Running {child.name}");
+                //Debug.Log($"Running {child.name}");
                 switch (child.Process()) {
                     case Status.Running:
                         return Status.Running;
@@ -81,9 +81,9 @@ namespace Pathfinding.BehaviourTrees {
         public Selector(string name, int priority = 0) : base(name, priority) { }
 
         public override Status Process() {
-            Debug.Log($"Current at {name}");
+            //Debug.Log($"Current at {name}");
             if (currentChild < children.Count) {
-                Debug.Log($"Running {children[currentChild].name}");
+                //Debug.Log($"Running {children[currentChild].name}");
                 switch (children[currentChild].Process()) {
                     case Status.Running:
                         return Status.Running;
@@ -105,9 +105,9 @@ namespace Pathfinding.BehaviourTrees {
         public Sequence(string name, int priority = 0) : base(name, priority) { }
 
         public override Status Process() {
-            Debug.Log($"Current at {name}");
+            //Debug.Log($"Current at {name}");
             if (currentChild < children.Count) {
-                Debug.Log($"Running {children[currentChild].name}");
+                //Debug.Log($"Running {children[currentChild].name}");
                 switch (children[currentChild].Process()) {
                     case Status.Running:
                         return Status.Running;
@@ -136,7 +136,7 @@ namespace Pathfinding.BehaviourTrees {
         public override Status Process()
         {
             var stat = strategy.Process();
-            Debug.Log($"Running leaf {name} with {stat}");
+            //Debug.Log($"Running leaf {name} with {stat}");
             return stat;
         }
 

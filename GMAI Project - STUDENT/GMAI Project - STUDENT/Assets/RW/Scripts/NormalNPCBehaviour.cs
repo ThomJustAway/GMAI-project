@@ -97,7 +97,7 @@ public class NormalNPCBehaviour : MonoBehaviour , IDamageable
     private void Update()
     {
         tree.Process();
-        tree.PrintTree();
+        //tree.PrintTree();
     }
 
 

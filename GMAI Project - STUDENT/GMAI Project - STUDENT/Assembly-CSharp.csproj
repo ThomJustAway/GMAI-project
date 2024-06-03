@@ -80,6 +80,7 @@
     <Compile Include="Assets\RW\Scripts\Utility\ListExtansions.cs" />
     <Compile Include="Assets\RW\Scripts\Enemy Ai\EnemyVision.cs" />
     <Compile Include="Assets\RW\Scripts\Pattern\PoolingPattern.cs" />
+    <Compile Include="Assets\RW\Scripts\Enemy Ai\EnemyFist.cs" />
     <Compile Include="Assets\RW\Scripts\States\DuckingState.cs" />
     <Compile Include="Assets\RW\Scripts\Misc\SoundManager.cs" />
     <Compile Include="Assets\RW\Scripts\Enemy Ai\Enemy FSm\EnemyState.cs" />

@@ -16,7 +16,6 @@ namespace Assets.RW.Scripts.Enemy_Ai
         public List<GameObject> visibles = new List<GameObject>();
 
 
-        public float lastBulletSeenTime;
 
         void OnTriggerEnter(Collider other)
         {
@@ -101,17 +100,11 @@ namespace Assets.RW.Scripts.Enemy_Ai
         }
 
 
-        // Use this for initialization
-        void Start()
-        {
-            lastBulletSeenTime = float.NegativeInfinity;
-        }
-
         // Update is called once per frame
         void Update()
         {
             UpdateVisibility();
-            DebugVisualise();
+            //DebugVisualise();
         }
 
         void DebugVisualise()
@@ -121,6 +114,12 @@ namespace Assets.RW.Scripts.Enemy_Ai
                 Debug.DrawLine(transform.position, o.transform.position, Color.red);
 
             }
+        }
+
+        private void OnDrawGizmos()
+        {
+            Gizmos.color = Color.red;
+            Gizmos.DrawWireSphere(transform.position, closeFieldDistance);
         }
     }
 }

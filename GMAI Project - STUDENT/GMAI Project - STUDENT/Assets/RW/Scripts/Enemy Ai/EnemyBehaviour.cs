@@ -21,11 +21,16 @@ public class EnemyBehaviour : MonoBehaviour
     [SerializeField]
     float probabilityToKeepRoaming = 1f;
 
+    [Header("Chasing")]
+    [SerializeField]
+    float attackingRadius = 1f;
+
     int speedHash = Animator.StringToHash("Speed");
     public NavMeshAgent Agent { get => agent; }
     public float RoamingRadius { get => roamingRadius;}
     public float ProbabilityToKeepRoaming { get => probabilityToKeepRoaming; }
-    public EnemyVision Vision { get => vision; set => vision = value; }
+    public EnemyVision Vision { get => vision; }
+    public float AttackingRadius { get => attackingRadius; }
 
     //FSM
     FSM enemyBehaviour;
@@ -34,6 +39,7 @@ public class EnemyBehaviour : MonoBehaviour
         agent = GetComponent<NavMeshAgent>();
         enemyBehaviour = new();
         enemyBehaviour.Add(new EnemyRoamingState(enemyBehaviour,this));
+        enemyBehaviour.Add(new EnemyChasingState(enemyBehaviour,this));
         enemyBehaviour.SetCurrentState((int)EnemyStates.Roaming);
     }
 
