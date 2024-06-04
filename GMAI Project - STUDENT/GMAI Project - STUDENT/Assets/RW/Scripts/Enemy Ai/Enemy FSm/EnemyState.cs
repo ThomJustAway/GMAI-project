@@ -143,6 +143,11 @@ namespace Assets.RW.Scripts.Enemy_Ai.Enemy_FSm
 
             agent.SetDestination(player.transform.position);
             enemyAgent.DisplayMovementAnimation(1f);
+
+            if(Vector3.Distance(enemyAgent.transform.position,player.transform.position) < enemyAgent.AttackingRadius)
+            {
+                mFsm.SetCurrentState((int)EnemyStates.Fighting);
+            }
         }
 
         public override void Exit()
@@ -154,17 +159,98 @@ namespace Assets.RW.Scripts.Enemy_Ai.Enemy_FSm
 
     public class EnemyAttackingState : EnemyState
     {
-
-
+        EnemyVision vision;
+        GameObject player;
         public EnemyAttackingState(FSM fsm, EnemyBehaviour enemyAgent) : base(fsm, enemyAgent)
         {
+            mId = (int)EnemyStates.Fighting;
+            vision = enemyAgent.Vision;
+        }
+
+        int playerLayerMask = LayerMask.NameToLayer("Player");
+        float elapseTime = 0f;
+        float reactionTime = 0f;
+        public override void Enter()
+        {
+            enemyAgent.ToggleHandCollider(true);
+            foreach (var t in vision.visibles)
+            {
+                if (t.layer == playerLayerMask)
+                {
+                    player = t;
+                    enemyAgent.SetFightingAnimation(true);
+                    break;
+                }
+            }
+            DecideOnReactionTime();
+            
+        }
+
+        public override void Update()
+        {
+            if (!vision.visibles.Contains(player))
+            {
+                mFsm.SetCurrentState(PreviousState.ID);
+                return;
+            }
+            FaceToPlayer();
+            while (elapseTime < reactionTime)
+            {
+                elapseTime += Time.deltaTime;
+                return;
+            }
+            //if there is no more reaction time
+            DecideOnReactionTime();
+            elapseTime = 0f;
+            DecideOnAttack();
+        }
+
+        void DecideOnReactionTime()
+        {
+            reactionTime = Random.Range(enemyAgent.MinReactionTime, enemyAgent.MaxReactionTime);
+        }
+
+        void FaceToPlayer()
+        {
+            Vector3 targetDirectionVec = player.transform.position - enemyAgent.transform.position;
+            Quaternion targetDirection = Quaternion.LookRotation(targetDirectionVec);
+            Quaternion curDirection = player.transform.rotation;
+            player.transform.rotation = Quaternion.Lerp(curDirection, 
+                targetDirection, Time.deltaTime * enemyAgent.RotationSpeed);
+        }
+
+        void DecideOnAttack()
+        {
+            int randAttack = Random.Range(0, 2);
+
+            switch(randAttack)
+            {
+                case 0:
+                    enemyAgent.TriggerPunch();
+                    break;
+                case 1:
+                    enemyAgent.TriggerHook();
+                    break;
+                default:
+                    enemyAgent.TriggerPunch();
+                    break;
+            }
+        }
+        
+        public override void Exit()
+        {
+            enemyAgent.ToggleHandCollider(false);
+            enemyAgent.SetFightingAnimation(false);
+            elapseTime = 0f;
+            player = null;
         }
     }
 
     public enum EnemyStates
     {
         Roaming,
-        Chasing
+        Chasing,
+        Fighting
     }
 
 }
