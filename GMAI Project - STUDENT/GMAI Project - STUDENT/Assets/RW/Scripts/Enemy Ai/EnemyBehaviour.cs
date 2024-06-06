@@ -16,6 +16,7 @@ public class EnemyBehaviour : MonoBehaviour, IDamageable
     [SerializeField] int health = 50;
     [SerializeField]Animator animator;
     [SerializeField] EnemyVision vision;
+    Collider bodyCollider;
     NavMeshAgent agent;
     [Header("Roaming")]
     [SerializeField]
@@ -33,11 +34,16 @@ public class EnemyBehaviour : MonoBehaviour, IDamageable
     [SerializeField] float maxReactionTime = 0.2f;
     [SerializeField] Collider leftHand;
     [SerializeField] Collider rightHand;
+
+    [Header("Hurting")]
+    [SerializeField] float maxStunTime = 0.1f;
+    [SerializeField] float minStunTime = 0.2f;
     int speedHash = Animator.StringToHash("Speed");
     int fightingHash = Animator.StringToHash("PrepareFight");
     int punchHash = Animator.StringToHash("Punch");
     int hookHash = Animator.StringToHash("Hook");
     int hurtHash = Animator.StringToHash("Hurt");
+    int dieHash = Animator.StringToHash("Die");
     public NavMeshAgent Agent { get => agent; }
     public float RoamingRadius { get => roamingRadius;}
     public float ProbabilityToKeepRoaming { get => probabilityToKeepRoaming; }
@@ -46,6 +52,8 @@ public class EnemyBehaviour : MonoBehaviour, IDamageable
     public float MinReactionTime { get => minReactionTime; set => minReactionTime = value; }
     public float MaxReactionTime { get => maxReactionTime; set => maxReactionTime = value; }
     public float RotationSpeed { get => rotationSpeed; set => rotationSpeed = value; }
+    public float MaxStunTime { get => maxStunTime; set => maxStunTime = value; }
+    public float MinStunTime { get => minStunTime; set => minStunTime = value; }
 
     //FSM
     FSM enemyBehaviour;
@@ -53,15 +61,19 @@ public class EnemyBehaviour : MonoBehaviour, IDamageable
     {
         ToggleHandCollider(false);
         agent = GetComponent<NavMeshAgent>();
+        bodyCollider = GetComponent<Collider>();
         enemyBehaviour = new();
         enemyBehaviour.Add(new EnemyRoamingState(enemyBehaviour,this));
         enemyBehaviour.Add(new EnemyChasingState(enemyBehaviour,this));
         enemyBehaviour.Add(new EnemyAttackingState(enemyBehaviour,this));
+        enemyBehaviour.Add(new EnemyHurtState(enemyBehaviour, this));
+        enemyBehaviour.Add(new EnemyDeathState(enemyBehaviour, this));
         enemyBehaviour.SetCurrentState((int)EnemyStates.Roaming);
     }
 
     private void Update()
     {
+        print($"Enemy state {enemyBehaviour.GetCurrentState()}");
         enemyBehaviour.Update();
     }
 
@@ -110,8 +122,22 @@ public class EnemyBehaviour : MonoBehaviour, IDamageable
 
     public void TakeDamage(object sender, int damage)
     {
-        health -= damage;
-        animator.SetTrigger(hurtHash);
-        //transition to hurt state;
+        if(enemyBehaviour.GetCurrentState().ID != (int)EnemyStates.Hurting)
+        {
+            health -= damage;
+            if(health < 0)
+            {
+                health = 0;
+                bodyCollider.enabled = false;
+                animator.SetTrigger(dieHash);
+                enemyBehaviour.SetCurrentState((int)EnemyStates.Death);
+            }
+            else
+            {
+                animator.SetTrigger(hurtHash);
+                enemyBehaviour.SetCurrentState((int)EnemyStates.Hurting);
+            }
+
+        }
     }
 }

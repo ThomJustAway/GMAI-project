@@ -354,6 +354,7 @@
 "Assets/RW/Scripts/Character.cs"
 "Assets/RW/Scripts/Chris/IGrabbale.cs"
 "Assets/RW/Scripts/Enemy Ai/Enemy FSm/EnemyState.cs"
+"Assets/RW/Scripts/Enemy Ai/EnemyAttackController.cs"
 "Assets/RW/Scripts/Enemy Ai/EnemyBehaviour.cs"
 "Assets/RW/Scripts/Enemy Ai/EnemyFist.cs"
 "Assets/RW/Scripts/Enemy Ai/EnemyVision.cs"

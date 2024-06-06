@@ -172,7 +172,7 @@ namespace Assets.RW.Scripts.Enemy_Ai.Enemy_FSm
         float reactionTime = 0f;
         public override void Enter()
         {
-            enemyAgent.ToggleHandCollider(true);
+            //enemyAgent.ToggleHandCollider(true);
             foreach (var t in vision.visibles)
             {
                 if (t.layer == playerLayerMask)
@@ -188,9 +188,10 @@ namespace Assets.RW.Scripts.Enemy_Ai.Enemy_FSm
 
         public override void Update()
         {
-            if (!vision.visibles.Contains(player))
+            if (!vision.visibles.Contains(player) ||
+                !IsPlayerCloser())
             {
-                mFsm.SetCurrentState(PreviousState.ID);
+                mFsm.SetCurrentState((int)EnemyStates.Chasing);
                 return;
             }
             FaceToPlayer();
@@ -203,6 +204,12 @@ namespace Assets.RW.Scripts.Enemy_Ai.Enemy_FSm
             DecideOnReactionTime();
             elapseTime = 0f;
             DecideOnAttack();
+        }
+
+        bool IsPlayerCloser()
+        {
+            return Vector3.Distance(enemyAgent.transform.position, 
+                player.transform.position) <= enemyAgent.AttackingRadius;
         }
 
         void DecideOnReactionTime()
@@ -239,10 +246,50 @@ namespace Assets.RW.Scripts.Enemy_Ai.Enemy_FSm
         
         public override void Exit()
         {
-            enemyAgent.ToggleHandCollider(false);
+            //enemyAgent.ToggleHandCollider(false);
             enemyAgent.SetFightingAnimation(false);
             elapseTime = 0f;
             player = null;
+        }
+    }
+
+    public class EnemyHurtState : EnemyState
+    {
+        float stunTime;
+        float elapseTime;
+        public EnemyHurtState(FSM fsm, EnemyBehaviour enemyAgent) : base(fsm, enemyAgent)
+        {
+            mId = (int)EnemyStates.Hurting;
+        }
+
+        public override void Enter()
+        {
+            elapseTime = 0f;
+            DecideStunTime();
+        }
+
+        public override void Update()
+        {
+            while(elapseTime < stunTime)
+            {
+                elapseTime += Time.deltaTime;
+                return;
+            }
+            mFsm.SetCurrentState(PreviousState);
+        }
+
+        void DecideStunTime()
+        {
+            stunTime = Random.Range(enemyAgent.MinStunTime, enemyAgent.MaxStunTime);
+        }
+
+    }
+
+    public class EnemyDeathState : EnemyState
+    {
+        public EnemyDeathState(FSM fsm, EnemyBehaviour enemyAgent) : base(fsm, enemyAgent)
+        {
+            mId = (int)EnemyStates.Death;
         }
     }
 
@@ -250,7 +297,9 @@ namespace Assets.RW.Scripts.Enemy_Ai.Enemy_FSm
     {
         Roaming,
         Chasing,
-        Fighting
+        Fighting,
+        Hurting,
+        Death
     }
 
 }

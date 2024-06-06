@@ -315,6 +315,11 @@ namespace RayWenderlich.Unity.StatePatternInUnity
         }
         #endregion
 
+        protected void LateUpdate()
+        {
+            transform.localEulerAngles = new Vector3(0, transform.localEulerAngles.y, 0);
+        }
+
         #region MonoBehaviour Callbacks
 
 

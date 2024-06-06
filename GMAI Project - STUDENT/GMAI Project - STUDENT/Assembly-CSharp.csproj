@@ -92,6 +92,7 @@
     <Compile Include="Assets\RW\Asset Store Creatures 03\Rabbits\Demo\Scripts\AnimatorParamatersChange.cs" />
     <Compile Include="Assets\RW\Scripts\States\GroundedState.cs" />
     <Compile Include="Assets\RW\Asset Store Creatures 02\Lowpoly Toon Cat Lite\Demo\Cat_Lite_Demo.cs" />
+    <Compile Include="Assets\RW\Scripts\Enemy Ai\EnemyAttackController.cs" />
     <Compile Include="Assets\RW\Scripts\Misc\UIManager.cs" />
   </ItemGroup>
   <ItemGroup>
