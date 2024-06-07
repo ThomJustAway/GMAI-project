@@ -69,14 +69,6 @@ namespace Player
             {
                 mFsm.SetCurrentState((int)MainState.Rolling);
             }
-            else if (Input.GetKeyUp(KeyCode.Alpha1))
-            {
-                mFsm.SetCurrentState((int)MainState.Wave);
-            }
-            else if (Input.GetKeyUp(KeyCode.Mouse1))
-            {
-                mFsm.SetCurrentState((int)MainState.Block);
-            }
             else if (!character.IsGrounded)
             {
                 mFsm.SetCurrentState((int)MainState.Falling);
@@ -278,62 +270,33 @@ namespace Player
 
     }
 
-    public class PlayerWaveState : PlayerMainState
+
+    public class PlayerHurtState : PlayerMainState
     {
-        int waveState = Animator.StringToHash("Wave");
-        public PlayerWaveState(Character character, FSM mfsm) : base(character, mfsm)
+        private float recoveryPeriod;
+        private float elapseTime;
+        public PlayerHurtState(Character character, FSM mfsm) : base(character, mfsm)
         {
-            mId = (int)MainState.Wave;
+            mId = (int)(MainState.Hurt);
         }
 
         public override void Enter()
         {
-            character.TriggerAnimation(waveState);
+            elapseTime = 0f;
+            recoveryPeriod = Random.Range(character.MinRecoveryTime, character.MaxRecoveryTime);
         }
 
         public override void Update()
         {
-
-            if (character.Anim.GetCurrentAnimatorStateInfo(0).IsName("Wave") &&
-                character.Anim.GetCurrentAnimatorStateInfo(0).normalizedTime > 0.7f)
+            while(elapseTime < recoveryPeriod)
             {
-                mFsm.SetCurrentState((int)MainState.Movement);
+                elapseTime += Time.deltaTime;
+                return;
             }
+            mFsm.SetCurrentState(PreviousState);
         }
 
-        public override void Exit()
-        {
-            character.Anim.ResetTrigger(waveState);
-        }
 
-    }
-
-    public class PlayerBlockState : PlayerMainState
-    {
-        int blockState = Animator.StringToHash("Block");
-        public PlayerBlockState(Character character, FSM mfsm) : base(character, mfsm)
-        {
-            mId = (int)MainState.Block;
-        }
-
-        public override void Enter()
-        {
-            character.TriggerAnimation(blockState);
-        }
-        public override void Update()
-        {
-
-            if (character.Anim.GetCurrentAnimatorStateInfo(0).IsName("block") &&
-                character.Anim.GetCurrentAnimatorStateInfo(0).normalizedTime > 0.7f)
-            {
-                mFsm.SetCurrentState((int)MainState.Movement);
-            }
-        }
-
-        public override void Exit()
-        {
-            character.Anim.ResetTrigger(blockState);
-        }
     }
 
     public enum MainState
@@ -345,7 +308,7 @@ namespace Player
         Rolling,
         Wave,
         Block,
-        
+        Hurt
     }
 
     public class PlayerSubState : FSMState
@@ -361,7 +324,6 @@ namespace Player
 
     public class PlayerMeleeAttack : PlayerSubState
     {
-        bool hasDrawSword;
         SwordBehaviour sword;
         int sheathSwordAnimation = Animator.StringToHash("SheathMelee");
         int swingSwordAnimation = Animator.StringToHash("SwingMelee");
@@ -375,30 +337,16 @@ namespace Player
 
         public override void Enter()
         {
-            character.SetAnimationBool(character.isMelee, true);
-            hasDrawSword = false;
-            anim.ResetTrigger(drawSwordAnimation);
-            anim.ResetTrigger(swingSwordAnimation);
-            anim.ResetTrigger(sheathSwordAnimation);
+            DrawSword();
+            //anim.ResetTrigger(drawSwordAnimation);
+            //anim.ResetTrigger(swingSwordAnimation);
+            //anim.ResetTrigger(sheathSwordAnimation);
         }
 
         public override void Update()
         {
-            DetermineNextState();
 
-            if (Input.GetKeyUp(KeyCode.Q) )
-            {
-                if (hasDrawSword)
-                {
-                    SheathSword();
-                }
-                else
-                {
-                    DrawSword();
-                }
-            }
 
-            if (!hasDrawSword) return;
             //wait for next input 
 
             if (Input.GetKeyDown(KeyCode.Mouse0))
@@ -411,12 +359,12 @@ namespace Player
             {
                 sword.SetHitBox(false);
             }
+            DetermineNextState();
 
         }
 
         private void DrawSword()
         {
-            hasDrawSword = true;
             character.TriggerAnimation(drawSwordAnimation);
             character.Equip(character.MeleeWeapon);
             sword = character.CurrentWeapon.GetComponent<SwordBehaviour>();
@@ -424,7 +372,6 @@ namespace Player
 
         private void SheathSword()
         {
-            hasDrawSword = false;
             character.TriggerAnimation(sheathSwordAnimation);
             sword = null;
             character.Unequip();
@@ -437,9 +384,9 @@ namespace Player
 
         void DetermineNextState()
         {
-            if (Input.GetKeyUp(KeyCode.E))
+            if (Input.GetKeyUp(KeyCode.Q))
             {
-                mFsm.SetCurrentState((int)Substate.Range);
+                mFsm.SetCurrentState((int)Substate.Twohand);
             }
         }
     }
@@ -479,16 +426,117 @@ namespace Player
         {
             if (Input.GetKeyUp(KeyCode.E))
             {
-                mFsm.SetCurrentState((int)Substate.Melee);
+                mFsm.SetCurrentState((int)Substate.Twohand);
             }
         }
 
+    }
+    public class PlayerTwoHandState : PlayerSubState
+    {
+        public PlayerTwoHandState(Character character, FSM mfsm) : base(character, mfsm)
+        {
+            mId = (int)Substate.Twohand;
+        }
+
+        public override void Enter()
+        {
+            character.SetAnimationBool(character.isMelee, true);
+        }
+
+        public override void Update()
+        {
+            //decide transition
+            DecideTransition();
+        }
+
+        private void DecideTransition()
+        {
+            if (Input.GetKeyUp(KeyCode.Q))
+            {
+                //switch to melee
+                mFsm.SetCurrentState((int)Substate.Melee);
+            }
+            else if (Input.GetKeyUp(KeyCode.E))
+            {
+                mFsm.SetCurrentState((int)Substate.Range);
+            }
+            else if (Input.GetKeyUp(KeyCode.Alpha1))
+            {
+                mFsm.SetCurrentState((int)Substate.Wave);
+            }
+            else if (Input.GetKeyUp(KeyCode.Mouse1))
+            {
+                mFsm.SetCurrentState((int)Substate.Block);
+            }
+        }
+    }
+
+    public class PlayerWaveState : PlayerSubState
+    {
+        int waveState = Animator.StringToHash("Wave");
+        public PlayerWaveState(Character character, FSM mfsm) : base(character, mfsm)
+        {
+            mId = (int)Substate.Wave;
+        }
+
+        public override void Enter()
+        {
+            character.TriggerAnimation(waveState);
+        }
+
+        public override void Update()
+        {
+
+            if (character.Anim.GetCurrentAnimatorStateInfo(2).IsName("Wave") &&
+                character.Anim.GetCurrentAnimatorStateInfo(2).normalizedTime > 0.7f)
+            {
+                mFsm.SetCurrentState((int)MainState.Movement);
+            }
+        }
+
+        public override void Exit()
+        {
+            character.Anim.ResetTrigger(waveState);
+        }
+
+    }
+
+    public class PlayerBlockState : PlayerSubState
+    {
+        int blockState = Animator.StringToHash("Block");
+        public PlayerBlockState(Character character, FSM mfsm) : base(character, mfsm)
+        {
+            mId = (int)Substate.Block;
+        }
+
+        public override void Enter()
+        {
+            character.TriggerAnimation(blockState);
+        }
+
+        public override void Update()
+        {
+
+            if (character.Anim.GetCurrentAnimatorStateInfo(2).IsName("block") &&
+                character.Anim.GetCurrentAnimatorStateInfo(2).normalizedTime > 0.7f)
+            {
+                mFsm.SetCurrentState((int)MainState.Movement);
+            }
+        }
+
+        public override void Exit()
+        {
+            character.Anim.ResetTrigger(blockState);
+        }
     }
 
     public enum Substate
     {
         Melee,
         Range,
+        Twohand,
+        Wave,
+        Block,
     }
 
 }

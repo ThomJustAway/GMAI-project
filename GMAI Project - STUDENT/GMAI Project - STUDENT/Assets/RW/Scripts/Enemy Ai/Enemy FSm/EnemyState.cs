@@ -219,10 +219,10 @@ namespace Assets.RW.Scripts.Enemy_Ai.Enemy_FSm
 
         void FaceToPlayer()
         {
-            Vector3 targetDirectionVec = player.transform.position - enemyAgent.transform.position;
+            Vector3 targetDirectionVec =  player.transform.position - enemyAgent.transform.position ;
             Quaternion targetDirection = Quaternion.LookRotation(targetDirectionVec);
-            Quaternion curDirection = player.transform.rotation;
-            player.transform.rotation = Quaternion.Lerp(curDirection, 
+            Quaternion curDirection = enemyAgent.transform.rotation;
+            enemyAgent.transform.rotation = Quaternion.Lerp(curDirection, 
                 targetDirection, Time.deltaTime * enemyAgent.RotationSpeed);
         }
 
@@ -293,13 +293,22 @@ namespace Assets.RW.Scripts.Enemy_Ai.Enemy_FSm
         }
     }
 
+    public class EnemyDefenceState : EnemyState
+    {
+        public EnemyDefenceState(FSM fsm, EnemyBehaviour enemyAgent) : base(fsm, enemyAgent)
+        {
+            mId = (int)EnemyStates.Defend;
+        }
+    }
+
     public enum EnemyStates
     {
         Roaming,
         Chasing,
         Fighting,
         Hurting,
-        Death
+        Death,
+        Defend
     }
 
 }

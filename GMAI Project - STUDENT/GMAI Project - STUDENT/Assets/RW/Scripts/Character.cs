@@ -76,6 +76,11 @@ namespace RayWenderlich.Unity.StatePatternInUnity
         [SerializeField]
         private float rollForce = 0.5f;
 
+        [SerializeField]
+        private float minRecoveryTime;
+        [SerializeField]
+        private float maxRecoveryTime;
+
         private GameObject currentWeapon;
         private Quaternion currentRotation;
         private int horizonalMoveParam = Animator.StringToHash("H_Speed");
@@ -132,6 +137,8 @@ namespace RayWenderlich.Unity.StatePatternInUnity
         public FSMState currentPlayerState { get { return movementFSM.GetCurrentState(); } }
 
         public GameObject CurrentWeapon { get => currentWeapon; set => currentWeapon = value; }
+        public float MinRecoveryTime { get => minRecoveryTime; set => minRecoveryTime = value; }
+        public float MaxRecoveryTime { get => maxRecoveryTime; set => maxRecoveryTime = value; }
 
         private void Start()
         {
@@ -140,7 +147,10 @@ namespace RayWenderlich.Unity.StatePatternInUnity
             attackingFSM = new FSM();
             attackingFSM.Add(new PlayerMeleeAttack(this, attackingFSM));
             attackingFSM.Add(new PlayerRangeAttack(this, attackingFSM));
-            attackingFSM.SetCurrentState((int)Substate.Melee);
+            attackingFSM.Add(new PlayerWaveState(this, attackingFSM));
+            attackingFSM.Add(new PlayerBlockState(this, attackingFSM));
+            attackingFSM.Add(new PlayerTwoHandState(this, attackingFSM));
+            attackingFSM.SetCurrentState((int)Substate.Twohand);
             
             movementFSM = new FSM();
             movementFSM.Add(new PlayerMovementState(this,movementFSM , attackingFSM));
@@ -148,15 +158,14 @@ namespace RayWenderlich.Unity.StatePatternInUnity
             movementFSM.Add(new PlayerJumpState(this, movementFSM));
             movementFSM.Add(new PlayerFallingState(this, movementFSM));
             movementFSM.Add(new PlayerRollingState(this, movementFSM));
-            movementFSM.Add(new PlayerWaveState(this, movementFSM));
-            movementFSM.Add(new PlayerBlockState(this, movementFSM));
+            movementFSM.Add(new PlayerHurtState(this, movementFSM));
             movementFSM.SetCurrentState((int)MainState.Movement);
 
         }
 
         private void Update()
         {
-            //print(movementFSM.GetCurrentState());
+            print(movementFSM.GetCurrentState());
             movementFSM.Update();
         }
 
@@ -310,8 +319,14 @@ namespace RayWenderlich.Unity.StatePatternInUnity
 
         public void TakeDamage(object sender, int damage)
         {
-            print("took damage");
-            anim.SetTrigger(hurtAnim);
+            int id = movementFSM.GetCurrentState().ID;
+            if (id != (int)(MainState.Hurt ) &&
+                id != (int)MainState.Block)
+            {
+                anim.SetTrigger(hurtAnim);
+
+                movementFSM.SetCurrentState((int)(MainState.Hurt));
+            }
         }
         #endregion
 

@@ -68,6 +68,7 @@ public class EnemyBehaviour : MonoBehaviour, IDamageable
         enemyBehaviour.Add(new EnemyAttackingState(enemyBehaviour,this));
         enemyBehaviour.Add(new EnemyHurtState(enemyBehaviour, this));
         enemyBehaviour.Add(new EnemyDeathState(enemyBehaviour, this));
+
         enemyBehaviour.SetCurrentState((int)EnemyStates.Roaming);
     }
 
@@ -137,7 +138,6 @@ public class EnemyBehaviour : MonoBehaviour, IDamageable
                 animator.SetTrigger(hurtHash);
                 enemyBehaviour.SetCurrentState((int)EnemyStates.Hurting);
             }
-
         }
     }
 }
