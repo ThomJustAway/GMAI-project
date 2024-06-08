@@ -44,6 +44,12 @@ public class EnemyBehaviour : MonoBehaviour, IDamageable
     int hookHash = Animator.StringToHash("Hook");
     int hurtHash = Animator.StringToHash("Hurt");
     int dieHash = Animator.StringToHash("Die");
+    int defendHash = Animator.StringToHash("Block");
+
+    [Header("Defend")]
+    [Range(0, 1)]
+    [SerializeField]
+    float probabilityToDefend = 0.5f;
     public NavMeshAgent Agent { get => agent; }
     public float RoamingRadius { get => roamingRadius;}
     public float ProbabilityToKeepRoaming { get => probabilityToKeepRoaming; }
@@ -54,6 +60,7 @@ public class EnemyBehaviour : MonoBehaviour, IDamageable
     public float RotationSpeed { get => rotationSpeed; set => rotationSpeed = value; }
     public float MaxStunTime { get => maxStunTime; set => maxStunTime = value; }
     public float MinStunTime { get => minStunTime; set => minStunTime = value; }
+    public Animator Animator { get => animator; set => animator = value; }
 
     //FSM
     FSM enemyBehaviour;
@@ -68,13 +75,13 @@ public class EnemyBehaviour : MonoBehaviour, IDamageable
         enemyBehaviour.Add(new EnemyAttackingState(enemyBehaviour,this));
         enemyBehaviour.Add(new EnemyHurtState(enemyBehaviour, this));
         enemyBehaviour.Add(new EnemyDeathState(enemyBehaviour, this));
-
+        enemyBehaviour.Add(new EnemyDefenceState(enemyBehaviour, this));
         enemyBehaviour.SetCurrentState((int)EnemyStates.Roaming);
     }
 
     private void Update()
     {
-        print($"Enemy state {enemyBehaviour.GetCurrentState()}");
+        //print($"Enemy state {enemyBehaviour.GetCurrentState()}");
         enemyBehaviour.Update();
     }
 
@@ -123,8 +130,17 @@ public class EnemyBehaviour : MonoBehaviour, IDamageable
 
     public void TakeDamage(object sender, int damage)
     {
-        if(enemyBehaviour.GetCurrentState().ID != (int)EnemyStates.Hurting)
+        int curId = enemyBehaviour.GetCurrentState().ID;
+        if (curId != (int)EnemyStates.Hurting &&
+            curId != (int)EnemyStates.Defend)
         {
+            if (CanDefend())
+            {
+                animator.SetTrigger(defendHash);
+                enemyBehaviour.SetCurrentState((int)EnemyStates.Defend);
+                return;
+            }//will block the attack
+
             health -= damage;
             if(health < 0)
             {
@@ -138,6 +154,12 @@ public class EnemyBehaviour : MonoBehaviour, IDamageable
                 animator.SetTrigger(hurtHash);
                 enemyBehaviour.SetCurrentState((int)EnemyStates.Hurting);
             }
+        }
+
+        bool CanDefend()
+        {
+            float randPos = Random.value;
+            return randPos <= probabilityToDefend;
         }
     }
 }

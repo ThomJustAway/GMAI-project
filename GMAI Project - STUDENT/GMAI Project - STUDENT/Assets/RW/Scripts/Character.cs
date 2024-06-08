@@ -135,7 +135,7 @@ namespace RayWenderlich.Unity.StatePatternInUnity
         private FSM movementFSM;
         private FSM attackingFSM;
         public FSMState currentPlayerState { get { return movementFSM.GetCurrentState(); } }
-
+        public FSMState subStatePlayerState { get { return attackingFSM.GetCurrentState(); } }
         public GameObject CurrentWeapon { get => currentWeapon; set => currentWeapon = value; }
         public float MinRecoveryTime { get => minRecoveryTime; set => minRecoveryTime = value; }
         public float MaxRecoveryTime { get => maxRecoveryTime; set => maxRecoveryTime = value; }
@@ -166,6 +166,7 @@ namespace RayWenderlich.Unity.StatePatternInUnity
         private void Update()
         {
             print(movementFSM.GetCurrentState());
+            print(attackingFSM.GetCurrentState());
             movementFSM.Update();
         }
 
@@ -321,7 +322,7 @@ namespace RayWenderlich.Unity.StatePatternInUnity
         {
             int id = movementFSM.GetCurrentState().ID;
             if (id != (int)(MainState.Hurt ) &&
-                id != (int)MainState.Block)
+                attackingFSM.GetCurrentState().ID != (int)(Substate.Block))
             {
                 anim.SetTrigger(hurtAnim);
 

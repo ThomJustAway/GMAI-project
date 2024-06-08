@@ -83,7 +83,6 @@ public class NormalNPCBehaviour : MonoBehaviour , IDamageable
 
         action.AddChild(aggroSequence);
 
-
         action.AddChild(new Leaf("Wave at player", new Wave(player,transform,animator,this), 100));
 
         var nothingToDoStrategy = new RandomSelector("Idle strategy" , 50);

@@ -1,4 +1,5 @@
 ﻿using PGGE.Patterns;
+using Player;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
@@ -295,9 +296,20 @@ namespace Assets.RW.Scripts.Enemy_Ai.Enemy_FSm
 
     public class EnemyDefenceState : EnemyState
     {
+        Animator anim;
         public EnemyDefenceState(FSM fsm, EnemyBehaviour enemyAgent) : base(fsm, enemyAgent)
         {
             mId = (int)EnemyStates.Defend;
+            anim = enemyAgent.Animator;
+        }
+
+        public override void Update()
+        {
+            if (anim.GetCurrentAnimatorStateInfo(0).IsName("Block") &&
+                anim.GetCurrentAnimatorStateInfo(0).normalizedTime > 0.7f)
+            {
+                mFsm.SetCurrentState(PreviousState);
+            }
         }
     }
 

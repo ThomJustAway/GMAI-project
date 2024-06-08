@@ -487,10 +487,11 @@ namespace Player
         public override void Update()
         {
 
-            if (character.Anim.GetCurrentAnimatorStateInfo(2).IsName("Wave") &&
+            if ((character.Anim.GetCurrentAnimatorStateInfo(2).IsName("Wave") &&
                 character.Anim.GetCurrentAnimatorStateInfo(2).normalizedTime > 0.7f)
+                )
             {
-                mFsm.SetCurrentState((int)MainState.Movement);
+                mFsm.SetCurrentState((int)Substate.Twohand);
             }
         }
 
@@ -517,10 +518,12 @@ namespace Player
         public override void Update()
         {
 
-            if (character.Anim.GetCurrentAnimatorStateInfo(2).IsName("block") &&
-                character.Anim.GetCurrentAnimatorStateInfo(2).normalizedTime > 0.7f)
+            if ((character.Anim.GetCurrentAnimatorStateInfo(2).IsName("block") &&
+                character.Anim.GetCurrentAnimatorStateInfo(2).normalizedTime > 0.7f) 
+                //!character.Anim.GetCurrentAnimatorStateInfo(2).IsName("block")
+                )
             {
-                mFsm.SetCurrentState((int)MainState.Movement);
+                mFsm.SetCurrentState((int)Substate.Twohand);
             }
         }
 

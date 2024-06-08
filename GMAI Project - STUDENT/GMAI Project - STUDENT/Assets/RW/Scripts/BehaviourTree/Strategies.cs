@@ -236,10 +236,10 @@ namespace Pathfinding.BehaviourTrees {
 
         public Node.Status Process()
         {
-            if(player.currentPlayerState.ID == (int)MainState.Wave &&
+            if(player.subStatePlayerState.ID == (int)Substate.Wave &&
             Vector3.Distance(player.transform.position, entity.position) < 10f &&
             !npc.IsMadAtPlayer
-            )
+            ) 
             {
                 if (!hasWave)
                 {
