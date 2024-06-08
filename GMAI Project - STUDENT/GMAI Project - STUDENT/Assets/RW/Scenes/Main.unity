@@ -3590,6 +3590,11 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 9
       objectReference: {fileID: 0}
+    - target: {fileID: 2683621229712960991, guid: 0b3ed6d805f4a0c4293e71beea7d4022,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2749816979222701336, guid: 0b3ed6d805f4a0c4293e71beea7d4022,
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -9642,6 +9647,7 @@ MonoBehaviour:
   rightHand: {fileID: 1552009417}
   maxStunTime: 0.1
   minStunTime: 0.2
+  probabilityToDefend: 0.5
 --- !u!136 &1833036536
 CapsuleCollider:
   m_ObjectHideFlags: 0
