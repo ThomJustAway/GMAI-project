@@ -81,6 +81,9 @@ namespace RayWenderlich.Unity.StatePatternInUnity
         [SerializeField]
         private float maxRecoveryTime;
 
+        [SerializeField]
+        private float boxingSenseRadius = 2f;
+
         private GameObject currentWeapon;
         private Quaternion currentRotation;
         private int horizonalMoveParam = Animator.StringToHash("H_Speed");
@@ -89,7 +92,9 @@ namespace RayWenderlich.Unity.StatePatternInUnity
         private int hardLanding = Animator.StringToHash("HardLand");
         private int crouching = Animator.StringToHash("Crouch");
         private int hurtAnim = Animator.StringToHash("Hurt");
+        private int boxingStanceAnimation = Animator.StringToHash("Box");
 
+        
         #endregion
 
         #region Properties
@@ -139,6 +144,7 @@ namespace RayWenderlich.Unity.StatePatternInUnity
         public GameObject CurrentWeapon { get => currentWeapon; set => currentWeapon = value; }
         public float MinRecoveryTime { get => minRecoveryTime; set => minRecoveryTime = value; }
         public float MaxRecoveryTime { get => maxRecoveryTime; set => maxRecoveryTime = value; }
+        public float BoxingSenseRadius { get => boxingSenseRadius; set => boxingSenseRadius = value; }
 
         private void Start()
         {
@@ -159,14 +165,15 @@ namespace RayWenderlich.Unity.StatePatternInUnity
             movementFSM.Add(new PlayerFallingState(this, movementFSM));
             movementFSM.Add(new PlayerRollingState(this, movementFSM));
             movementFSM.Add(new PlayerHurtState(this, movementFSM));
+            movementFSM.Add(new PlayerBoxingState(this, movementFSM));
             movementFSM.SetCurrentState((int)MainState.Movement);
 
         }
 
         private void Update()
         {
-            print(movementFSM.GetCurrentState());
-            print(attackingFSM.GetCurrentState());
+            //print(movementFSM.GetCurrentState());
+            //print(attackingFSM.GetCurrentState());
             movementFSM.Update();
         }
 
@@ -272,6 +279,12 @@ namespace RayWenderlich.Unity.StatePatternInUnity
             Destroy(currentWeapon);
         }
 
+        public void SetBoxingStance(bool canBoxStance)
+        {
+            anim.SetBool(boxingStanceAnimation, canBoxStance);
+
+        }
+
         private bool CheckIfGrounded()
         {
             //shoot a raycast down
@@ -328,6 +341,20 @@ namespace RayWenderlich.Unity.StatePatternInUnity
 
                 movementFSM.SetCurrentState((int)(MainState.Hurt));
             }
+        }
+
+        public void SetBoxingState(bool canBox)
+        {
+            if (canBox)
+            {
+                attackingFSM.SetCurrentState((int)Substate.Twohand);
+                movementFSM.SetCurrentState((int)MainState.Boxing);
+            }
+            else
+            {
+                movementFSM.SetCurrentState((int)MainState.Movement);
+            }
+
         }
         #endregion
 

@@ -3,15 +3,15 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class EnemyFist : MonoBehaviour
+public class Fist : MonoBehaviour
 {
-    [SerializeField] Transform enemy;
+    [SerializeField] Transform holder;
 
     private void OnTriggerEnter(Collider other)
     {
         if (other == null) return;
         
-        if(other.transform == enemy) return;//ignore this two
+        if(other.transform == holder) return;//ignore this two
 
         if(other.TryGetComponent<IDamageable>(out var component))
         {

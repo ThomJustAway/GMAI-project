@@ -1,5 +1,6 @@
 ﻿using PGGE.Patterns;
 using RayWenderlich.Unity.StatePatternInUnity;
+using System.Diagnostics.Contracts;
 using UnityEngine;
 
 namespace Player
@@ -57,6 +58,10 @@ namespace Player
 
         private void DetermineStateChange() 
         {
+            //determine if can box
+
+            
+
             if (Input.GetKeyUp(KeyCode.Tab))
             {
                 mFsm.SetCurrentState((int)MainState.Crouch);
@@ -74,6 +79,7 @@ namespace Player
                 mFsm.SetCurrentState((int)MainState.Falling);
             }
         }
+
     }
 
     public class PlayerCrouchState : PlayerMainState
@@ -162,7 +168,6 @@ namespace Player
         }
 
         
-
         public override void Enter()
         {
             Jump();
@@ -270,6 +275,57 @@ namespace Player
 
     }
 
+    public class PlayerBoxingState : PlayerMainState
+    {
+        Transform enemy;
+        
+        public PlayerBoxingState(Character character, FSM mfsm) : base(character, mfsm)
+        {
+            mId = (int)MainState.Boxing;
+
+        }
+
+        public override void Enter()
+        {
+            base.Enter();
+            character.SetBoxingStance(true);
+            character.ResetMoveParams();
+
+            var colliders = Physics.OverlapSphere(character.transform.position, character.BoxingSenseRadius);
+            foreach(var collider in colliders)
+            {
+                if(collider.tag == "Enemy")
+                {
+                    enemy = collider.transform;
+                    //stop the loop and break out
+                    return;
+
+                }
+            }
+        }
+
+
+        public override void Update()
+        {
+            FaceEnemy();
+
+        }
+
+
+        void FaceEnemy()
+        {
+            Vector3 targetDirectionVec = enemy.transform.position - character.transform.position;
+            Quaternion targetDirection = Quaternion.LookRotation(targetDirectionVec);
+            Quaternion curDirection = character.transform.rotation;
+            character.transform.rotation = Quaternion.Lerp(curDirection,
+                targetDirection, Time.deltaTime * character.RotationSpeed);
+        }
+
+        public override void Exit()
+        {
+            character.SetBoxingStance(false);
+        }
+    }
 
     public class PlayerHurtState : PlayerMainState
     {
@@ -308,7 +364,8 @@ namespace Player
         Rolling,
         Wave,
         Block,
-        Hurt
+        Hurt,
+        Boxing
     }
 
     public class PlayerSubState : FSMState
@@ -540,6 +597,7 @@ namespace Player
         Twohand,
         Wave,
         Block,
+
     }
 
 }

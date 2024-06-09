@@ -62,6 +62,7 @@
   <ItemGroup>
     <Compile Include="Assets\RW\Scripts\Enemy Ai\EnemyBehaviour.cs" />
     <Compile Include="Assets\RW\Scripts\Utility\Vector3Extensions.cs" />
+    <Compile Include="Assets\RW\Scripts\Enemy Ai\FistController.cs" />
     <Compile Include="Assets\RW\Scripts\Pattern\FSM.cs" />
     <Compile Include="Assets\RW\Scripts\Misc\HitBox.cs" />
     <Compile Include="Assets\RW\Scripts\States\JumpingState.cs" />
@@ -69,8 +70,10 @@
     <Compile Include="Assets\RW\Scripts\States\StandingState.cs" />
     <Compile Include="Assets\RW\Scripts\NormalNPCBehaviour.cs" />
     <Compile Include="Assets\RW\Scripts\IDamageable.cs" />
+    <Compile Include="Assets\RW\Scripts\Enemy Ai\Fist.cs" />
     <Compile Include="Assets\RW\Scripts\Character.cs" />
     <Compile Include="Assets\RW\Scripts\Misc\SimpleCamFollow.cs" />
+    <Compile Include="Assets\RW\Scripts\Player State\PlayerBoxSensor.cs" />
     <Compile Include="Assets\RW\Scripts\Pattern\Singleton.cs" />
     <Compile Include="Assets\RW\Scripts\BehaviourTree\Node.cs" />
     <Compile Include="Assets\RW\Scripts\Pattern\SingletonDontDestroy.cs" />
@@ -80,7 +83,6 @@
     <Compile Include="Assets\RW\Scripts\Utility\ListExtansions.cs" />
     <Compile Include="Assets\RW\Scripts\Enemy Ai\EnemyVision.cs" />
     <Compile Include="Assets\RW\Scripts\Pattern\PoolingPattern.cs" />
-    <Compile Include="Assets\RW\Scripts\Enemy Ai\EnemyFist.cs" />
     <Compile Include="Assets\RW\Scripts\States\DuckingState.cs" />
     <Compile Include="Assets\RW\Scripts\Misc\SoundManager.cs" />
     <Compile Include="Assets\RW\Scripts\Enemy Ai\Enemy FSm\EnemyState.cs" />
@@ -92,7 +94,6 @@
     <Compile Include="Assets\RW\Asset Store Creatures 03\Rabbits\Demo\Scripts\AnimatorParamatersChange.cs" />
     <Compile Include="Assets\RW\Scripts\States\GroundedState.cs" />
     <Compile Include="Assets\RW\Asset Store Creatures 02\Lowpoly Toon Cat Lite\Demo\Cat_Lite_Demo.cs" />
-    <Compile Include="Assets\RW\Scripts\Enemy Ai\EnemyAttackController.cs" />
     <Compile Include="Assets\RW\Scripts\Misc\UIManager.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class EnemyAttackController : MonoBehaviour
+public class FistController : MonoBehaviour
 {
     [SerializeField] Collider leftFistCollider;
     [SerializeField] Collider rightFistCollider;
