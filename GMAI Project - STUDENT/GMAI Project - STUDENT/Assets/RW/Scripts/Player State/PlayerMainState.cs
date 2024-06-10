@@ -2,6 +2,7 @@
 using RayWenderlich.Unity.StatePatternInUnity;
 using System.Diagnostics.Contracts;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace Player
 {
@@ -275,6 +276,7 @@ namespace Player
 
     }
 
+    //For boxing the enemy
     public class PlayerBoxingState : PlayerMainState
     {
         Transform enemy;
@@ -283,7 +285,42 @@ namespace Player
         {
             mId = (int)MainState.Boxing;
 
+            subFSM = new();
+            //change this later
+
+            subFSM.Add(new AnimationStateWaiter(character,
+                subFSM,
+                "punch 2",
+                "Punch1",
+                0,
+                (int)BoxStates.Idle,
+                (int)BoxStates.RightJab
+                ));
+
+            subFSM.Add(new AnimationStateWaiter(character,
+                subFSM,
+                "punch",
+                "Punch2",
+                0,
+                (int)BoxStates.Idle,
+                (int)BoxStates.LeftJab
+                ));
+
+            subFSM.Add(new AnimationStateWaiter(character,
+                subFSM,
+                "block",
+                "Block",
+                2,
+                (int)BoxStates.Idle,
+                (int)BoxStates.Block
+                ));
+
+            subFSM.Add(new IdleBoxing(subFSM, (int)BoxStates.Idle));
+            subFSM.SetCurrentState((int)BoxStates.Idle);
+
         }
+
+
 
         public override void Enter()
         {
@@ -299,16 +336,15 @@ namespace Player
                     enemy = collider.transform;
                     //stop the loop and break out
                     return;
-
                 }
-            }
+            }//get the enemy and face them
         }
 
 
         public override void Update()
         {
-            FaceEnemy();
-
+            //FaceEnemy();
+            subFSM.Update();
         }
 
 
@@ -323,9 +359,60 @@ namespace Player
 
         public override void Exit()
         {
+
             character.SetBoxingStance(false);
         }
+
     }
+
+    public class IdleBoxing : FSMState
+    {
+        public IdleBoxing(FSM fsm, int id) : base(fsm, id)
+        {
+        }
+
+        public override void Update()
+        {
+            DecideStates();
+        }
+
+        private void DecideStates()
+        {
+            if (Input.GetMouseButtonUp(0))
+            {
+                mFsm.SetCurrentState((int)BoxStates.Block);
+            }
+            else if (Input.GetMouseButtonUp(1))
+            {
+                DecideOnPunch();
+            }
+        }
+
+        void DecideOnPunch()
+        {
+            int randInt = Random.Range(0, 2);
+
+            switch(randInt)
+            {
+                case 0:
+                    mFsm.SetCurrentState((int)BoxStates.LeftJab);
+                    break;
+                default:
+                    mFsm.SetCurrentState((int)BoxStates.RightJab);
+                    break;
+            }
+        }
+    }
+    public enum BoxStates
+    {
+        Idle,
+        Block,
+        LeftJab,
+        RightJab,
+    }
+
+
+
 
     public class PlayerHurtState : PlayerMainState
     {
@@ -587,6 +674,54 @@ namespace Player
         public override void Exit()
         {
             character.Anim.ResetTrigger(blockState);
+        }
+    }
+
+    public class AnimationStateWaiter : PlayerSubState
+    {
+        protected string nameAnimation;
+        protected int hashAnimation;
+        protected int layerIndex;
+        protected float maxTimeWaitNormalize;
+        protected Animator animator;
+        protected int transitionState;
+        public AnimationStateWaiter(Character character, FSM mfsm,
+            string nameOfAnimation,
+            string nameOfHashAnimation,
+            int layerIndex,
+            int transitionState,
+            int stateId,
+            float maxTimerNormalize = 0.7f
+            ) : base(character, mfsm)
+        {
+            mId = stateId;
+            nameAnimation = nameOfAnimation;
+            hashAnimation = Animator.StringToHash(nameOfHashAnimation);
+            maxTimeWaitNormalize = maxTimerNormalize;
+            this.layerIndex = layerIndex;
+            this.transitionState = transitionState;
+        }
+
+        public override void Enter()
+        {
+            character.TriggerAnimation(hashAnimation);
+        }
+
+        public override void Update()
+        {
+
+            if ((character.Anim.GetCurrentAnimatorStateInfo(layerIndex).IsName(nameAnimation) &&
+                character.Anim.GetCurrentAnimatorStateInfo(layerIndex).normalizedTime > maxTimeWaitNormalize)
+                //!character.Anim.GetCurrentAnimatorStateInfo(2).IsName("block")
+                )
+            {
+                mFsm.SetCurrentState(transitionState);
+            }
+        }
+
+        public override void Exit()
+        {
+            character.Anim.ResetTrigger(hashAnimation);
         }
     }
 

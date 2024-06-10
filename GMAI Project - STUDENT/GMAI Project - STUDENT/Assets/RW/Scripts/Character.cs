@@ -85,7 +85,6 @@ namespace RayWenderlich.Unity.StatePatternInUnity
         private float boxingSenseRadius = 2f;
 
         private GameObject currentWeapon;
-        private Quaternion currentRotation;
         private int horizonalMoveParam = Animator.StringToHash("H_Speed");
         private int verticalMoveParam = Animator.StringToHash("V_Speed");
         private int shootParam = Animator.StringToHash("Shoot");
