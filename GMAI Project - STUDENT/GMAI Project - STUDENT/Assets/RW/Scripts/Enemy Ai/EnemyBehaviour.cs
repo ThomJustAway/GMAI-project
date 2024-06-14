@@ -7,8 +7,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
-public class EnemyBehaviour : MonoBehaviour, IDamageable
+public class EnemyBehaviour : MonoBehaviour, IDamageable , IBoxingEnemy
 {
+    #region properties
     //walk running idle, roaming, sleeping, Attacking, 
     [SerializeField] float walkingSpeed = 1.5f;
     [SerializeField] float runningSpeed = 3f;
@@ -45,11 +46,13 @@ public class EnemyBehaviour : MonoBehaviour, IDamageable
     int hurtHash = Animator.StringToHash("Hurt");
     int dieHash = Animator.StringToHash("Die");
     int defendHash = Animator.StringToHash("Block");
+    #endregion
 
     [Header("Defend")]
     [Range(0, 1)]
     [SerializeField]
     float probabilityToDefend = 0.5f;
+    #region public properties
     public NavMeshAgent Agent { get => agent; }
     public float RoamingRadius { get => roamingRadius;}
     public float ProbabilityToKeepRoaming { get => probabilityToKeepRoaming; }
@@ -61,7 +64,9 @@ public class EnemyBehaviour : MonoBehaviour, IDamageable
     public float MaxStunTime { get => maxStunTime; set => maxStunTime = value; }
     public float MinStunTime { get => minStunTime; set => minStunTime = value; }
     public Animator Animator { get => animator; set => animator = value; }
-
+    public bool IsPlayerEnemy { get => true; } //will always be the player selectedEnemy.
+    public bool IsDead { get => health <= 0; }
+    #endregion
     //FSM
     FSM enemyBehaviour;
     private void Start()
@@ -69,6 +74,7 @@ public class EnemyBehaviour : MonoBehaviour, IDamageable
         ToggleHandCollider(false);
         agent = GetComponent<NavMeshAgent>();
         bodyCollider = GetComponent<Collider>();
+        //setting up the FSM for the enemy behaviour
         enemyBehaviour = new();
         enemyBehaviour.Add(new EnemyRoamingState(enemyBehaviour,this));
         enemyBehaviour.Add(new EnemyChasingState(enemyBehaviour,this));
@@ -81,7 +87,7 @@ public class EnemyBehaviour : MonoBehaviour, IDamageable
 
     private void Update()
     {
-        //print($"Enemy state {enemyBehaviour.GetCurrentState()}");
+        //run the enemy behaviour.
         enemyBehaviour.Update();
     }
 
@@ -142,7 +148,7 @@ public class EnemyBehaviour : MonoBehaviour, IDamageable
             }//will block the attack
 
             health -= damage;
-            if(health < 0)
+            if(health <= 0)
             {
                 health = 0;
                 bodyCollider.enabled = false;

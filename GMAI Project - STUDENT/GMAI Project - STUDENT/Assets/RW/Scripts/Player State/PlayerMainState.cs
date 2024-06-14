@@ -6,9 +6,13 @@ using UnityEngine.UIElements;
 
 namespace Player
 {
+    #region main state
+    /// <summary>
+    /// What the main state should consist.
+    /// </summary>
     public class PlayerMainState : FSMState
     {
-        protected FSM subFSM;
+        protected FSM subFSM; //will contain the FSM for the sub states
         protected Character character;
 
         public PlayerMainState(Character character , FSM mfsm)
@@ -18,25 +22,28 @@ namespace Player
             //implement 
         }
     }
-
+    /// <summary>
+    /// Movement state allows and control how the player move when
+    /// they press the WASD keys.
+    /// </summary>
     public class PlayerMovementState : PlayerMainState
     {
         public PlayerMovementState(Character character, FSM mfsm) : base(character, mfsm)
         {
             mId = (int)MainState.Movement;
-            //todo add the states here
         }
 
         public PlayerMovementState(Character character, FSM mfsm , FSM subFSm) : base(character, mfsm)
         {
+            //add the subfsm so that the state can update the subFSM
             mId = (int)MainState.Movement;
             this.subFSM = subFSm;
-            //todo add the states here
         }
 
         public override void Update()
-        {
+        {//run the handFSM here so that the player can attack
             subFSM.Update();
+            //Determine what state should be made.
             DetermineStateChange();
         }
         public override void FixedUpdate()
@@ -48,21 +55,22 @@ namespace Player
         {
             float vertSpeed = Input.GetAxis("Vertical") * character.MovementSpeed;
             float horzontalSpeed = Input.GetAxis("Horizontal") * character.RotationSpeed;
+            //get input from the player
             if(!Input.GetKey(KeyCode.LeftShift))
             { 
                 horzontalSpeed /= 2;
                 vertSpeed /= 2;
             }
+            //if it is not sprinting, then reduce the input by half.
+            //this is to make sure the player walk rather than run.
 
+            //move the character based on the input.
             character.Move(vertSpeed, horzontalSpeed);
         }
 
         private void DetermineStateChange() 
         {
-            //determine if can box
-
-            
-
+            //specify the input need or condition needed to switch states
             if (Input.GetKeyUp(KeyCode.Tab))
             {
                 mFsm.SetCurrentState((int)MainState.Crouch);
@@ -82,7 +90,10 @@ namespace Player
         }
 
     }
-
+    /// <summary>
+    /// Player crouch state is when the player can sneaky go through
+    /// holes to go through small areas.
+    /// </summary>
     public class PlayerCrouchState : PlayerMainState
     {
 
@@ -102,13 +113,14 @@ namespace Player
         //to fix: player can still exit crouch if under bridge. make sure
         //to not allow player to leave crouch state if something is above them.
         public override void Enter()
-        {
+        {//show that the player is crouching
             character.SetAnimationBool(character.Crouching, true);
             character.SetCrouchCollider(true);
         }
 
         public override void Exit()
         {
+            //show that the player is not crouching.
             character.SetAnimationBool(character.Crouching, false);
             character.SetCrouchCollider(false);
 
@@ -127,13 +139,19 @@ namespace Player
 
         private void MoveCharacter()
         {
+
             float vertSpeed = Input.GetAxis("Vertical") * character.MovementSpeed;
             float horzontalSpeed = Input.GetAxis("Horizontal") * character.RotationSpeed;
+            //get input from player
             if (!Input.GetKey(KeyCode.LeftShift))
             {
                 horzontalSpeed /= 2;
                 vertSpeed /= 2;
             }
+            //if it is not sprinting, then reduce the input by half.
+            //this is to make sure the player walk rather than run.
+
+            //move the character based on the input.
 
             character.Move(vertSpeed, horzontalSpeed);
         }
@@ -158,7 +176,9 @@ namespace Player
             }
         }
     }
-
+    /// <summary>
+    /// jump is when the player jumps when the player press spacebar.
+    /// </summary>
     public class PlayerJumpState : PlayerMainState
     {
         private int jumpParam = Animator.StringToHash("Jump");
@@ -182,7 +202,10 @@ namespace Player
             character.TriggerAnimation(jumpParam);
         }
     }
-
+    /// <summary>
+    /// Falling state is when the player dont have anymore ground left to step on
+    /// This cause it to start falling down.
+    /// </summary>
     public class PlayerFallingState : PlayerMainState
     {
         int landParam = Animator.StringToHash("Land");
@@ -202,6 +225,9 @@ namespace Player
 
         public override void Update()
         {
+            //will do a countdown timer, it will see if the player
+            //been falling for a long time, if it is, then player would 
+            //do a divebomb. Else it would do a normal landing.
             elapseTime += Time.deltaTime;
             if (character.IsGrounded && !hasLanded)
             {
@@ -221,12 +247,15 @@ namespace Player
 
         public override void Exit()
         {
+            //once it landed, reset the timer and haslanded variable
             elapseTime = 0f;
             hasLanded = false;
             
         }
     }
-
+    /// <summary>
+    /// Rolling state allows the player to roll around the scene when pressing F
+    /// </summary>
     public class PlayerRollingState : PlayerMainState
     {
         int rollAnimation = Animator.StringToHash("Roll");
@@ -238,7 +267,7 @@ namespace Player
         }
 
         public override void Enter()
-        {
+        {//show the player is rolling around
             character.TriggerAnimation(rollAnimation);
             character.SetCrouchCollider(true);
         }
@@ -276,58 +305,37 @@ namespace Player
 
     }
 
-    //For boxing the enemy
+    //For boxing the selectedEnemy
+    #region boxing
+    /// <summary>
+    /// boxing state is trigger if there is a nearby enemy that is willing
+    /// to box. This force the player to do the same (Because I thought
+    /// it would be cool)
+    /// </summary>
     public class PlayerBoxingState : PlayerMainState
     {
         Transform enemy;
         
-        public PlayerBoxingState(Character character, FSM mfsm) : base(character, mfsm)
+        public PlayerBoxingState(Character character, FSM mfsm, FSM subFSM) : base(character, mfsm)
         {
             mId = (int)MainState.Boxing;
 
-            subFSM = new();
+            this.subFSM = subFSM;
             //change this later
 
-            subFSM.Add(new AnimationStateWaiter(character,
-                subFSM,
-                "punch 2",
-                "Punch1",
-                0,
-                (int)BoxStates.Idle,
-                (int)BoxStates.RightJab
-                ));
-
-            subFSM.Add(new AnimationStateWaiter(character,
-                subFSM,
-                "punch",
-                "Punch2",
-                0,
-                (int)BoxStates.Idle,
-                (int)BoxStates.LeftJab
-                ));
-
-            subFSM.Add(new AnimationStateWaiter(character,
-                subFSM,
-                "block",
-                "Block",
-                2,
-                (int)BoxStates.Idle,
-                (int)BoxStates.Block
-                ));
-
-            subFSM.Add(new IdleBoxing(subFSM, (int)BoxStates.Idle));
             subFSM.SetCurrentState((int)BoxStates.Idle);
-
         }
 
 
 
         public override void Enter()
         {
-            base.Enter();
+            //show that the character is in boxing stance.
             character.SetBoxingStance(true);
+            //stop the player from moving
             character.ResetMoveParams();
 
+            //afterwards, find the enemy so that they can do the face off.
             var colliders = Physics.OverlapSphere(character.transform.position, character.BoxingSenseRadius);
             foreach(var collider in colliders)
             {
@@ -337,13 +345,15 @@ namespace Player
                     //stop the loop and break out
                     return;
                 }
-            }//get the enemy and face them
+            }//get the selectedEnemy and face them
         }
 
 
         public override void Update()
         {
-            //FaceEnemy();
+            //make sure that the player is facing the enemy
+            FaceEnemy();
+            //update the FSM for the boxing state.
             subFSM.Update();
         }
 
@@ -351,6 +361,11 @@ namespace Player
         void FaceEnemy()
         {
             Vector3 targetDirectionVec = enemy.transform.position - character.transform.position;
+            if(Vector3.Angle(targetDirectionVec,character.transform.forward) < 5)
+            {
+                return;
+            }
+
             Quaternion targetDirection = Quaternion.LookRotation(targetDirectionVec);
             Quaternion curDirection = character.transform.rotation;
             character.transform.rotation = Quaternion.Lerp(curDirection,
@@ -359,12 +374,14 @@ namespace Player
 
         public override void Exit()
         {
-
+            subFSM.SetCurrentState((int)BoxStates.Idle);
             character.SetBoxingStance(false);
         }
 
     }
-
+    /// <summary>
+    /// The idle state for the player when it waits for the player input.
+    /// </summary>
     public class IdleBoxing : FSMState
     {
         public IdleBoxing(FSM fsm, int id) : base(fsm, id)
@@ -376,6 +393,8 @@ namespace Player
             DecideStates();
         }
 
+        //will decide what attack the player would do if
+        //it hits a certain input.
         private void DecideStates()
         {
             if (Input.GetMouseButtonUp(0))
@@ -387,7 +406,9 @@ namespace Player
                 DecideOnPunch();
             }
         }
-
+        /// <summary>
+        /// will randomly do a punch to the enemy.
+        /// </summary>
         void DecideOnPunch()
         {
             int randInt = Random.Range(0, 2);
@@ -403,6 +424,8 @@ namespace Player
             }
         }
     }
+
+    //the states the player have when boxing.
     public enum BoxStates
     {
         Idle,
@@ -410,10 +433,11 @@ namespace Player
         LeftJab,
         RightJab,
     }
+    #endregion
 
-
-
-
+    /// <summary>
+    /// The state where the player could not do anything since it is hurt.
+    /// </summary>
     public class PlayerHurtState : PlayerMainState
     {
         private float recoveryPeriod;
@@ -425,12 +449,14 @@ namespace Player
 
         public override void Enter()
         {
+            //would randomly decide how long the recovery for the player.
             elapseTime = 0f;
             recoveryPeriod = Random.Range(character.MinRecoveryTime, character.MaxRecoveryTime);
         }
 
         public override void Update()
         {
+            //wait for the countdown of the recovery period.
             while(elapseTime < recoveryPeriod)
             {
                 elapseTime += Time.deltaTime;
@@ -441,7 +467,6 @@ namespace Player
 
 
     }
-
     public enum MainState
     {
         Movement,
@@ -454,7 +479,12 @@ namespace Player
         Hurt,
         Boxing
     }
+    #endregion
 
+    #region substate
+    /// <summary>
+    /// What the state the player substate would inheritS.
+    /// </summary>
     public class PlayerSubState : FSMState
     {
         protected Character character;
@@ -465,7 +495,10 @@ namespace Player
             this.mFsm = mfsm;
         }
     }
-
+    /// <summary>
+    /// When the player equip the sword, it can swing the sword which 
+    /// the melee attack state handle it.
+    /// </summary>
     public class PlayerMeleeAttack : PlayerSubState
     {
         SwordBehaviour sword;
@@ -481,26 +514,23 @@ namespace Player
 
         public override void Enter()
         {
+            //when entering the state, draw the sword.
             DrawSword();
-            //anim.ResetTrigger(drawSwordAnimation);
-            //anim.ResetTrigger(swingSwordAnimation);
-            //anim.ResetTrigger(sheathSwordAnimation);
         }
 
         public override void Update()
         {
-
-
             //wait for next input 
 
             if (Input.GetKeyDown(KeyCode.Mouse0))
             {
-                //show the attack
+                //show the attack and enable hit box.
                 sword.SetHitBox(true);
                 character.TriggerAnimation(swingSwordAnimation);
             }
             else if (!anim.GetCurrentAnimatorStateInfo(1).IsName("SwingSword") )
             {
+                //disable hit box.
                 sword.SetHitBox(false);
             }
             DetermineNextState();
@@ -528,13 +558,17 @@ namespace Player
 
         void DetermineNextState()
         {
+            //if player press q, unequip and exit the state.
             if (Input.GetKeyUp(KeyCode.Q))
             {
                 mFsm.SetCurrentState((int)Substate.Twohand);
             }
         }
     }
-
+    /// <summary>
+    /// Player would equip the fireball as the range attack for the player
+    /// to shoot out.
+    /// </summary>
     public class PlayerRangeAttack : PlayerSubState
     {
         int shootAnimation = Animator.StringToHash("Shoot");
@@ -546,6 +580,7 @@ namespace Player
 
         public override void Enter()
         {
+            //show the animation for range.
             character.SetAnimationBool(character.isMelee, false);
             character.Equip(character.ShootableWeapon);
         }
@@ -553,6 +588,7 @@ namespace Player
         public override void Update()
         {
             DetermineNextState();
+            //when player press the left mouse buttn, it would do a shoot animation
             if (Input.GetKeyDown(KeyCode.Mouse0))
             {
                 //show the attack
@@ -568,6 +604,7 @@ namespace Player
 
         void DetermineNextState()
         {
+            //if the player press E, unequip and exit the state
             if (Input.GetKeyUp(KeyCode.E))
             {
                 mFsm.SetCurrentState((int)Substate.Twohand);
@@ -575,6 +612,9 @@ namespace Player
         }
 
     }
+    /// <summary>
+    /// A state where the player is just waiting for player input.
+    /// </summary>
     public class PlayerTwoHandState : PlayerSubState
     {
         public PlayerTwoHandState(Character character, FSM mfsm) : base(character, mfsm)
@@ -595,6 +635,7 @@ namespace Player
 
         private void DecideTransition()
         {
+            //will wait for player to trigger a important event.
             if (Input.GetKeyUp(KeyCode.Q))
             {
                 //switch to melee
@@ -614,7 +655,9 @@ namespace Player
             }
         }
     }
-
+    /// <summary>
+    /// A state to wave at the creature npc
+    /// </summary>
     public class PlayerWaveState : PlayerSubState
     {
         int waveState = Animator.StringToHash("Wave");
@@ -625,12 +668,13 @@ namespace Player
 
         public override void Enter()
         {
+            //will trigger wave state
             character.TriggerAnimation(waveState);
         }
 
         public override void Update()
         {
-
+            //will check if the wave animation is over. once it is over, go back to twohand state.
             if ((character.Anim.GetCurrentAnimatorStateInfo(2).IsName("Wave") &&
                 character.Anim.GetCurrentAnimatorStateInfo(2).normalizedTime > 0.7f)
                 )
@@ -645,7 +689,9 @@ namespace Player
         }
 
     }
-
+    /// <summary>
+    /// Block attack when the player click left clikc
+    /// </summary>
     public class PlayerBlockState : PlayerSubState
     {
         int blockState = Animator.StringToHash("Block");
@@ -661,7 +707,7 @@ namespace Player
 
         public override void Update()
         {
-
+            //will wait for the block state is complete
             if ((character.Anim.GetCurrentAnimatorStateInfo(2).IsName("block") &&
                 character.Anim.GetCurrentAnimatorStateInfo(2).normalizedTime > 0.7f) 
                 //!character.Anim.GetCurrentAnimatorStateInfo(2).IsName("block")
@@ -700,6 +746,7 @@ namespace Player
             maxTimeWaitNormalize = maxTimerNormalize;
             this.layerIndex = layerIndex;
             this.transitionState = transitionState;
+            animator = character.Anim;
         }
 
         public override void Enter()
@@ -710,8 +757,10 @@ namespace Player
         public override void Update()
         {
 
-            if ((character.Anim.GetCurrentAnimatorStateInfo(layerIndex).IsName(nameAnimation) &&
-                character.Anim.GetCurrentAnimatorStateInfo(layerIndex).normalizedTime > maxTimeWaitNormalize)
+            if (((animator.GetCurrentAnimatorStateInfo(layerIndex).IsName(nameAnimation) &&
+                animator.GetCurrentAnimatorStateInfo(layerIndex).normalizedTime > maxTimeWaitNormalize) ||
+                !animator.GetCurrentAnimatorStateInfo(layerIndex).IsName(nameAnimation)
+                )
                 //!character.Anim.GetCurrentAnimatorStateInfo(2).IsName("block")
                 )
             {
@@ -734,5 +783,5 @@ namespace Player
         Block,
 
     }
-
+    #endregion
 }

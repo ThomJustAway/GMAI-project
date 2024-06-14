@@ -2703,6 +2703,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   holder: {fileID: 1252697823}
+  damage: 10
 --- !u!135 &229435749
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -2803,7 +2804,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 241515155}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7a5ac11cc976e418e8d13136b07e1f52, type: 3}
   m_Name: 
@@ -3166,6 +3167,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   holder: {fileID: 0}
+  damage: 10
 --- !u!65 &398902681
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -4248,7 +4250,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   player: {fileID: 1252697824}
-  enemy: {fileID: 1833036538}
 --- !u!1 &450533185
 GameObject:
   m_ObjectHideFlags: 0
@@ -7854,7 +7855,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1252697822}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0.7701237, z: 0, w: 0.6378946}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -10.91, y: 0, z: -5.35}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -7868,7 +7869,7 @@ Transform:
   - {fileID: 1202690721}
   - {fileID: 431119210}
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 100.73, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1252697824
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9104,6 +9105,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   holder: {fileID: 0}
+  damage: 10
 --- !u!850595691 &1552014931
 LightingSettings:
   m_ObjectHideFlags: 0
@@ -9315,6 +9317,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   holder: {fileID: 1252697823}
+  damage: 10
 --- !u!135 &1642312553
 SphereCollider:
   m_ObjectHideFlags: 0

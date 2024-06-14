@@ -2,6 +2,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// Fist controller just control the collider active state
+/// when it is playing an animation.
+/// </summary>
 public class FistController : MonoBehaviour
 {
     [SerializeField] Collider leftFistCollider;
@@ -12,7 +16,8 @@ public class FistController : MonoBehaviour
         leftFistCollider.enabled = false;
         rightFistCollider.enabled = false;
     }
-
+    //you can see the being used in the animation event for the punching
+    //animation for both player and enemy.
     public void EnableLeftFist()
     {
         leftFistCollider.enabled = true;

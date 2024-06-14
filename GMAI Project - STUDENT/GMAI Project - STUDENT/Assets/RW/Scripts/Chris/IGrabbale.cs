@@ -2,7 +2,7 @@
 using UnityEngine;
 
 namespace Assets.RW.Scripts.Chris
-{
+{//ignore this.
     public interface IGrabbale 
     {
         void Grab();

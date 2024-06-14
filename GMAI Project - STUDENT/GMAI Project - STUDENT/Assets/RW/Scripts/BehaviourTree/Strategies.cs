@@ -2,11 +2,13 @@ using Player;
 using RayWenderlich.Unity.StatePatternInUnity;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Eventing.Reader;
 using System.Drawing.Printing;
 using UnityEditor.Rendering;
 using UnityEngine;
 using UnityEngine.AI;
 
+//This is found in this video: https://www.youtube.com/watch?v=lusROFJ3_t8&pp=ygUYZ2l0IGFtZW5kIGJlaGF2aW91ciB0cmVl
 namespace Pathfinding.BehaviourTrees {
     public interface IStrategy {
         Node.Status Process();
@@ -28,7 +30,10 @@ namespace Pathfinding.BehaviourTrees {
             return Node.Status.Success;
         }
     }
-
+    /// <summary>
+    /// a simple condition node that check a condition
+    /// return success if true. else fail.
+    /// </summary>
     public class Condition : IStrategy {
         readonly Func<bool> predicate;
         
@@ -38,7 +43,7 @@ namespace Pathfinding.BehaviourTrees {
         
         public Node.Status Process() => predicate() ? Node.Status.Success : Node.Status.Failure;
     }
-
+    //not used dont look
     public class PatrolStrategy : IStrategy
     {
         readonly Transform entity;
@@ -80,7 +85,7 @@ namespace Pathfinding.BehaviourTrees {
 
         public void Reset() => currentIndex = 0;
     }
-
+    //not used dont look
     public class MoveToTarget : IStrategy {
         readonly Transform entity;
         readonly NavMeshAgent agent;
@@ -109,7 +114,9 @@ namespace Pathfinding.BehaviourTrees {
 
         public void Reset() => isPathCalculated = false;
     }
-
+    /// <summary>
+    /// A node that will complete once it reach a planned point
+    /// </summary>
     public class WanderAround : IStrategy
     {
         readonly Transform entity;
@@ -133,12 +140,15 @@ namespace Pathfinding.BehaviourTrees {
             merton.SetToWalkingSpeed();
             if (Vector3.Distance(entity.position, targetPosition) < agent.stoppingDistance)
             {
+                //once it reach a destination, create a new destination and wait
+                //and see if the creature should continue to wander around.
                 CreateTargetPosition();
                 return Node.Status.Success;
             }
             
             Debug.DrawLine(entity.position, targetPosition,Color.red);
-
+            //consistently set the destination to the target position (since we dont know if we will continue
+            //this action
             agent.SetDestination(targetPosition);
             //entity.LookAt(targetPosition.With(y: entity.position.y));
             merton.PlayWalkingAnimation(targetPosition);
@@ -154,13 +164,15 @@ namespace Pathfinding.BehaviourTrees {
         { 
             NavMeshPath path = new NavMeshPath();
             while (true)
-            {
+            {//will consistently check if a point within the wandering radius can
                 Vector3 randPos = UnityEngine.Random.insideUnitSphere *
                     UnityEngine.Random.Range(1f, wanderRadius);
                 //get a radius
+                //check if the path is viable
                 agent.CalculatePath(randPos, path);
                 if(path.status == NavMeshPathStatus.PathComplete)
-                {
+                {//if it is, set the target position to that position.
+                    
                     targetPosition = randPos.With(y: entity.position.y);
                     return;
                 }
@@ -174,7 +186,9 @@ namespace Pathfinding.BehaviourTrees {
 
         }
     }
-
+    /// <summary>
+    /// Chase player is when the merton is angry at the player.
+    /// </summary>
     public class ChasePlayer : IStrategy
     {
         readonly Transform entity;
@@ -195,13 +209,17 @@ namespace Pathfinding.BehaviourTrees {
 
         public Node.Status Process()
         {
+            //will make sure it would set the navmesh agent speed to the approriate settings.
             merton.SetToRunningSpeed();
+
             if (Vector3.Distance(entity.position, player.position) < 2f)
-            {
+            {//if the merton is close to the player, return success
                 return Node.Status.Success;
             }
 
+            //show that the merton is running toward the player.
             merton.PlayRunningAnimation(player.position);
+            //continuously set the destination to the player destination
             agent.SetDestination(player.position);
             if (agent.pathPending)
             {
@@ -219,6 +237,10 @@ namespace Pathfinding.BehaviourTrees {
         }
     }
 
+    /// <summary>
+    /// the wave leaf node would wave back to the player
+    /// if the player wave. else it would just do it own thing.
+    /// </summary>
     public class Wave : IStrategy
     {
         readonly Character player;
@@ -240,7 +262,7 @@ namespace Pathfinding.BehaviourTrees {
             Vector3.Distance(player.transform.position, entity.position) < 10f &&
             !npc.IsMadAtPlayer
             ) 
-            {
+            {//if the player is nearby and wave at merton, it would wave back
                 if (!hasWave)
                 {
                     hasWave = true;
@@ -256,7 +278,10 @@ namespace Pathfinding.BehaviourTrees {
 
         }
     }
-
+    /// <summary>
+    /// Will wait a certain amount of seconds
+    /// before return success. return running while running.
+    /// </summary>
     public class WaitStrategy : IStrategy
     {
         float elapseTime = 0;
@@ -279,6 +304,9 @@ namespace Pathfinding.BehaviourTrees {
         }
     }
 
+    /// <summary>
+    /// a leaf node that will wait for the attack animation to finish
+    /// </summary>
     public class WaitForAttackToFinish : IStrategy
     {
         Animator animator;
@@ -295,9 +323,11 @@ namespace Pathfinding.BehaviourTrees {
         {
             if (!animator.GetCurrentAnimatorStateInfo(0).IsName("Stab Attack"))
             {
+                //if the attack animation failed, then reset the hit box and return success
                 weapon.SetHitBox(false);
                 return Node.Status.Success;
             }
+            //else continue to wait.
             return Node.Status.Running;
 
         }

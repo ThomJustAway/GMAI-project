@@ -35,6 +35,9 @@ using UnityEngine;
 
 namespace RayWenderlich.Unity.StatePatternInUnity
 {
+    /// <summary>
+    /// Character is teh script that will control the player actions and what they do.
+    /// </summary>
     [RequireComponent(typeof(CapsuleCollider))]
     public class Character : MonoBehaviour, IDamageable
     {
@@ -136,10 +139,13 @@ namespace RayWenderlich.Unity.StatePatternInUnity
         public float RollForce { get => rollForce; set => rollForce = value; }
         #endregion
 
+        //fsm for the Hierarchical FSM  
         private FSM movementFSM;
-        private FSM attackingFSM;
+        private FSM handFSM;
+        private FSM boxingFSM;
+        //getters
         public FSMState currentPlayerState { get { return movementFSM.GetCurrentState(); } }
-        public FSMState subStatePlayerState { get { return attackingFSM.GetCurrentState(); } }
+        public FSMState subStatePlayerState { get { return handFSM.GetCurrentState(); } }
         public GameObject CurrentWeapon { get => currentWeapon; set => currentWeapon = value; }
         public float MinRecoveryTime { get => minRecoveryTime; set => minRecoveryTime = value; }
         public float MaxRecoveryTime { get => maxRecoveryTime; set => maxRecoveryTime = value; }
@@ -149,30 +155,67 @@ namespace RayWenderlich.Unity.StatePatternInUnity
         {
             playerCollider = GetComponent<CapsuleCollider>();
             
-            attackingFSM = new FSM();
-            attackingFSM.Add(new PlayerMeleeAttack(this, attackingFSM));
-            attackingFSM.Add(new PlayerRangeAttack(this, attackingFSM));
-            attackingFSM.Add(new PlayerWaveState(this, attackingFSM));
-            attackingFSM.Add(new PlayerBlockState(this, attackingFSM));
-            attackingFSM.Add(new PlayerTwoHandState(this, attackingFSM));
-            attackingFSM.SetCurrentState((int)Substate.Twohand);
-            
+            //setting up the FSM for both sub and main states.
+            //hand fsm is to control the sword, blocking and wave action
+            handFSM = new FSM();
+            handFSM.Add(new PlayerMeleeAttack(this, handFSM));
+            handFSM.Add(new PlayerRangeAttack(this, handFSM));
+            handFSM.Add(new PlayerWaveState(this, handFSM));
+            handFSM.Add(new PlayerBlockState(this, handFSM));
+            handFSM.Add(new PlayerTwoHandState(this, handFSM));
+            handFSM.SetCurrentState((int)Substate.Twohand);
+
+
+            //boxing is when it encounters the boxing enemy, it would trigger the boxing
+            //state to start boxing with the enemy.
+            boxingFSM = new();
+            boxingFSM.Add(new AnimationStateWaiter(
+                this,
+                boxingFSM,
+                "punch 2",
+                "Punch1",
+                0,
+                (int)BoxStates.Idle,
+                (int)BoxStates.RightJab
+                ));
+            boxingFSM.Add(new AnimationStateWaiter(this,
+                boxingFSM,
+                "punch",
+                "Punch2",
+                0,
+                (int)BoxStates.Idle,
+                (int)BoxStates.LeftJab
+                ));
+            boxingFSM.Add(new AnimationStateWaiter(this,
+                boxingFSM,
+                "block",
+                "Block",
+                2,
+                (int)BoxStates.Idle,
+                (int)BoxStates.Block,
+                1f
+                ));
+
+            boxingFSM.Add(new IdleBoxing(boxingFSM, (int)BoxStates.Idle));
+            boxingFSM.SetCurrentState((int)BoxStates.Idle);
+
+            //movement state is where the player move its entire body. This include
+            //moving around, jumping and rolling
             movementFSM = new FSM();
-            movementFSM.Add(new PlayerMovementState(this,movementFSM , attackingFSM));
-            movementFSM.Add(new PlayerCrouchState(this,movementFSM, attackingFSM));
+            movementFSM.Add(new PlayerMovementState(this,movementFSM , handFSM));
+            movementFSM.Add(new PlayerCrouchState(this,movementFSM, handFSM));
             movementFSM.Add(new PlayerJumpState(this, movementFSM));
             movementFSM.Add(new PlayerFallingState(this, movementFSM));
             movementFSM.Add(new PlayerRollingState(this, movementFSM));
             movementFSM.Add(new PlayerHurtState(this, movementFSM));
-            movementFSM.Add(new PlayerBoxingState(this, movementFSM));
+            movementFSM.Add(new PlayerBoxingState(this, movementFSM , boxingFSM));
             movementFSM.SetCurrentState((int)MainState.Movement);
 
         }
 
         private void Update()
         {
-            //print(movementFSM.GetCurrentState());
-            //print(attackingFSM.GetCurrentState());
+            //will start and run the FSM
             movementFSM.Update();
         }
 
@@ -182,7 +225,12 @@ namespace RayWenderlich.Unity.StatePatternInUnity
         }
 
         #region Methods
-
+        /// <summary>
+        /// Move the character to a certain location based on the speed
+        /// and rotation that is specfied.
+        /// </summary>
+        /// <param name="speed"></param>
+        /// <param name="rotationSpeed"></param>
         public void Move(float speed, float rotationSpeed)
         {
             Vector3 targetVelocity = speed * transform.forward * Time.deltaTime;
@@ -330,23 +378,30 @@ namespace RayWenderlich.Unity.StatePatternInUnity
 
         }
 
+        //implement IDamageable. Will check if the player have
+        //block the damage. Else it would take it.
         public void TakeDamage(object sender, int damage)
         {
             int id = movementFSM.GetCurrentState().ID;
             if (id != (int)(MainState.Hurt ) &&
-                attackingFSM.GetCurrentState().ID != (int)(Substate.Block))
+                handFSM.GetCurrentState().ID != (int)(Substate.Block) &&
+                boxingFSM.GetCurrentState().ID != (int)BoxStates.Block
+                )
             {
                 anim.SetTrigger(hurtAnim);
 
                 movementFSM.SetCurrentState((int)(MainState.Hurt));
             }
         }
-
+        /// <summary>
+        /// Set the animation for the boxing state. 
+        /// </summary>
+        /// <param name="canBox">the value which you want to set it too</param>
         public void SetBoxingState(bool canBox)
         {
             if (canBox)
             {
-                attackingFSM.SetCurrentState((int)Substate.Twohand);
+                handFSM.SetCurrentState((int)Substate.Twohand);
                 movementFSM.SetCurrentState((int)MainState.Boxing);
             }
             else
@@ -359,12 +414,8 @@ namespace RayWenderlich.Unity.StatePatternInUnity
 
         protected void LateUpdate()
         {
+            //This is to prevent any weird occurance where the rotation of the player is change due to Rigidbody.
             transform.localEulerAngles = new Vector3(0, transform.localEulerAngles.y, 0);
         }
-
-        #region MonoBehaviour Callbacks
-
-
-        #endregion
     }
 }
