@@ -5,6 +5,9 @@ namespace PGGE
 {
 	namespace Patterns
 	{
+		/// <summary>
+		/// Mr shamims generic FSM. Thank you mr Shamim.
+		/// </summary>
 		public class FSMState
 		{
 			public FSMState PreviousState { get; set; } = null;
@@ -62,7 +65,6 @@ namespace PGGE
              */
 			public virtual void FixedUpdate() { }
 		}
-
 		public class FSM
 		{
 			//A container object to store the set of states.
